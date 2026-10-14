@@ -15,13 +15,31 @@ export default function SettingsModal({ isOpen, onClose, currentSettings, onSett
 
   useEffect(() => {
     if (currentSettings) {
-      setParticipantsCount(currentSettings.participants_count || 25);
-      setEstimatedCost(currentSettings.estimated_cost_per_person || 1800);
-      setTargetFund(currentSettings.target_fundraising_total || 20000);
+      const p = currentSettings.participants_count || 25;
+      const c = currentSettings.estimated_cost_per_person || 1800;
+      setParticipantsCount(p);
+      setEstimatedCost(c);
+      setTargetFund(currentSettings.target_fundraising_total || (p * c));
       setEventName(currentSettings.event_name || 'GMG Seoul 2027 - Corea del Sud');
       setOratoryName(currentSettings.oratory_name || 'Oratorio Salesiano Don Bosco - Asti');
     }
   }, [currentSettings, isOpen]);
+
+  const handleParticipantsChange = (val) => {
+    const num = parseInt(val, 10);
+    setParticipantsCount(val);
+    if (!isNaN(num) && num > 0) {
+      setTargetFund(num * (parseFloat(estimatedCost) || 1800));
+    }
+  };
+
+  const handleEstimatedCostChange = (val) => {
+    const cost = parseFloat(val);
+    setEstimatedCost(val);
+    if (!isNaN(cost) && cost > 0) {
+      setTargetFund((parseInt(participantsCount, 10) || 25) * cost);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -125,7 +143,7 @@ export default function SettingsModal({ isOpen, onClose, currentSettings, onSett
                 max="200"
                 className="form-input"
                 value={participantsCount}
-                onChange={(e) => setParticipantsCount(e.target.value)}
+                onChange={(e) => handleParticipantsChange(e.target.value)}
                 required
               />
               <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
@@ -143,7 +161,7 @@ export default function SettingsModal({ isOpen, onClose, currentSettings, onSett
                 step="10"
                 className="form-input"
                 value={estimatedCost}
-                onChange={(e) => setEstimatedCost(e.target.value)}
+                onChange={(e) => handleEstimatedCostChange(e.target.value)}
                 required
               />
               <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
@@ -153,10 +171,20 @@ export default function SettingsModal({ isOpen, onClose, currentSettings, onSett
           </div>
 
           <div className="form-group">
-            <label className="form-label">
-              <Target size={14} style={{ display: 'inline', marginRight: '4px' }} />
-              Obiettivo Totale Raccolta Fondi Oratorio (€)
-            </label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+              <label className="form-label" style={{ marginBottom: 0 }}>
+                <Target size={14} style={{ display: 'inline', marginRight: '4px' }} />
+                Obiettivo Totale Raccolta Fondi Oratorio (€)
+              </label>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                style={{ fontSize: '0.72rem', padding: '2px 6px', color: '#38bdf8' }}
+                onClick={() => setTargetFund((parseInt(participantsCount, 10) || 25) * (parseFloat(estimatedCost) || 1800))}
+              >
+                Ricalcola: {participantsCount || 25} × {formatEuro(estimatedCost || 1800)}
+              </button>
+            </div>
             <input
               type="number"
               step="100"
@@ -165,6 +193,9 @@ export default function SettingsModal({ isOpen, onClose, currentSettings, onSett
               onChange={(e) => setTargetFund(e.target.value)}
               required
             />
+            <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+              Calcolato di default come <strong>{participantsCount} partenti × {formatEuro(estimatedCost)} = {formatEuro((parseInt(participantsCount, 10) || 25) * (parseFloat(estimatedCost) || 1800))}</strong>
+            </span>
           </div>
 
           <div className="form-row">

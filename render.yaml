@@ -1,11 +1,10 @@
 services:
   - type: web
     name: gmg-donbosco-asti
-    runtime: node
+    env: docker
     plan: free
     region: frankfurt
-    buildCommand: npm install && npm run build
-    startCommand: npm start
+    dockerfilePath: ./Dockerfile
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV

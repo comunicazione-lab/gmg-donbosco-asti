@@ -123,7 +123,11 @@ router.put('/', requireAuth, requireAdmin, async (req, res) => {
     }
 
     const costPerPerson = parseFloat(estimated_cost_per_person);
-    const targetFund = parseFloat(target_fundraising_total);
+    const safeCost = isNaN(costPerPerson) ? 1800 : costPerPerson;
+    let targetFund = parseFloat(target_fundraising_total);
+    if (isNaN(targetFund) || targetFund <= 0) {
+      targetFund = participants * safeCost;
+    }
 
     await query.run(`
       UPDATE settings
@@ -137,8 +141,8 @@ router.put('/', requireAuth, requireAdmin, async (req, res) => {
       WHERE id = 1
     `, [
       participants,
-      isNaN(costPerPerson) ? 1800 : costPerPerson,
-      isNaN(targetFund) ? 20000 : targetFund,
+      safeCost,
+      targetFund,
       event_name ? event_name.trim() : 'GMG Seoul 2027 - Corea del Sud',
       oratory_name ? oratory_name.trim() : 'Oratorio Salesiano Don Bosco - Asti',
       currency || '€'

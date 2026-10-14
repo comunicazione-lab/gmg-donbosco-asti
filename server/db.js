@@ -138,11 +138,18 @@ async function initDb() {
   // Seed delle impostazioni
   const existingSettings = await query.get('SELECT * FROM settings WHERE id = 1');
   if (!existingSettings) {
+    const defaultParticipants = 25;
+    const defaultCost = 1800.00;
+    const defaultTarget = defaultParticipants * defaultCost; // 45000.00
     await query.run(`
       INSERT INTO settings (id, participants_count, estimated_cost_per_person, target_fundraising_total, event_name, oratory_name, currency)
-      VALUES (1, 25, 1800.00, 20000.00, 'GMG Seoul 2027 - Corea del Sud', 'Oratorio Salesiano Don Bosco - Asti', '€')
-    `);
-    console.log('Impostazioni predefinite inizializzate.');
+      VALUES (1, ?, ?, ?, 'GMG Seoul 2027 - Corea del Sud', 'Oratorio Salesiano Don Bosco - Asti', '€')
+    `, [defaultParticipants, defaultCost, defaultTarget]);
+    console.log('Impostazioni predefinite inizializzate con obiettivo = persone * costo.');
+  } else if (existingSettings.target_fundraising_total === 20000) {
+    // Aggiorna l'impostazione precedente al nuovo calcolo persone * costo
+    const newTarget = existingSettings.participants_count * existingSettings.estimated_cost_per_person;
+    await query.run('UPDATE settings SET target_fundraising_total = ? WHERE id = 1', [newTarget]);
   }
 
   // Seed Utenti predefiniti

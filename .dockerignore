@@ -1,0 +1,11 @@
+node_modules
+client/node_modules
+client/dist
+.git
+.gitignore
+.env
+psw.env
+*.env
+data/*.db
+data/*.db-journal
+!data/.gitkeep

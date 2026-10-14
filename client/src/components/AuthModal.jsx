@@ -43,19 +43,7 @@ export default function AuthModal({ isOpen, onClose }) {
     }
   };
 
-  // Quick Demo Login helper
-  const handleQuickLogin = async (userType) => {
-    setLoading(true);
-    let u = 'admin';
-    if (userType === 'moderator') u = 'moderatore';
-    if (userType === 'user') u = 'giovane';
 
-    const result = await login(u, 'DonBosco2027!');
-    setLoading(false);
-    if (result.success) {
-      onClose();
-    }
-  };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -147,50 +135,6 @@ export default function AuthModal({ isOpen, onClose }) {
               >
                 {loading ? 'Accesso in corso...' : 'Accedi al Portale'}
               </button>
-
-              {/* Box Accesso Rapido Demo */}
-              <div
-                style={{
-                  marginTop: '24px',
-                  paddingTop: '16px',
-                  borderTop: '1px solid rgba(255, 255, 255, 0.08)'
-                }}
-              >
-                <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '10px', textAlign: 'center', letterSpacing: '0.05em' }}>
-                  🚀 Accesso Rapido per Prova & Dimostrazione
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-                  <button
-                    type="button"
-                    className="btn btn-outline btn-sm"
-                    style={{ fontSize: '0.74rem', padding: '6px 4px' }}
-                    onClick={() => handleQuickLogin('admin')}
-                    title="Accedi come Don Marco (Admin)"
-                  >
-                    👑 Admin
-                  </button>
-
-                  <button
-                    type="button"
-                    className="btn btn-outline btn-sm"
-                    style={{ fontSize: '0.74rem', padding: '6px 4px' }}
-                    onClick={() => handleQuickLogin('moderator')}
-                    title="Accedi come Chiara (Moderatore)"
-                  >
-                    🛡️ Moderatore
-                  </button>
-
-                  <button
-                    type="button"
-                    className="btn btn-outline btn-sm"
-                    style={{ fontSize: '0.74rem', padding: '6px 4px' }}
-                    onClick={() => handleQuickLogin('user')}
-                    title="Accedi come Matteo (Giovane GMG)"
-                  >
-                    🎒 Utente GMG
-                  </button>
-                </div>
-              </div>
             </form>
           ) : (
             <div>

@@ -8,21 +8,20 @@ import {
   LogIn,
   Sun,
   Moon,
-  Shield,
-  Download,
-  Calendar,
-  Sparkles
+  LayoutDashboard,
+  Coins,
+  Settings
 } from 'lucide-react';
 
 export default function Navbar({
+  activeSection,
+  setActiveSection,
   onOpenNewInitiative,
-  onOpenUsers,
-  onOpenSettings,
   onOpenAuth,
   theme,
   toggleTheme
 }) {
-  const { user, isAuthenticated, isAdmin, isModerator, logout, pendingCount } = useAuth();
+  const { user, isAuthenticated, isModerator, logout, pendingCount } = useAuth();
 
   return (
     <nav className="navbar">
@@ -43,13 +42,47 @@ export default function Navbar({
           </div>
         </div>
 
-        {/* Navigation & Controls */}
+        {/* Navigation Tabs (Sezioni Principali) per utenti autenticati */}
+        {isAuthenticated && (
+          <div className="section-nav-tabs">
+            <button
+              className={`section-tab-btn ${activeSection === 'dashboard' ? 'active' : ''}`}
+              onClick={() => setActiveSection('dashboard')}
+            >
+              <LayoutDashboard size={17} />
+              <span>Dashboard</span>
+            </button>
+
+            <button
+              className={`section-tab-btn ${activeSection === 'fundraising' ? 'active' : ''}`}
+              onClick={() => setActiveSection('fundraising')}
+            >
+              <Coins size={17} />
+              <span>Raccolta Fondi</span>
+            </button>
+
+            <button
+              className={`section-tab-btn ${activeSection === 'settings' ? 'active' : ''}`}
+              onClick={() => setActiveSection('settings')}
+            >
+              <Settings size={17} />
+              <span>Impostazioni</span>
+              {pendingCount > 0 && (
+                <span className="section-tab-badge" title={`${pendingCount} utenti da approvare`}>
+                  {pendingCount}
+                </span>
+              )}
+            </button>
+          </div>
+        )}
+
+        {/* Azioni Utente & Controlli */}
         <div className="nav-actions">
           {isAuthenticated ? (
             <>
-              {/* User badge */}
+              {/* Badge Utente */}
               <div className="user-pill">
-                <span className="user-name" style={{ fontSize: '0.85rem', fontWeight: 600 }}>
+                <span className="user-name" style={{ fontSize: '0.85rem', fontWeight: 700 }}>
                   {user.full_name}
                 </span>
                 <span className={`role-badge ${user.role}`}>
@@ -61,51 +94,23 @@ export default function Navbar({
                 </span>
               </div>
 
-              {/* Bottoni Moderatori e Admin */}
+              {/* Pulsante rapido Nuova Iniziativa per moderatori */}
               {isModerator && (
-                <>
-                  <button
-                    className="btn btn-primary btn-sm"
-                    onClick={onOpenNewInitiative}
-                    title="Crea una nuova attività di raccolta fondi"
-                  >
-                    <PlusCircle size={16} />
-                    <span>Nuova Iniziativa</span>
-                  </button>
-
-                  <button
-                    className="btn btn-outline btn-sm"
-                    onClick={onOpenUsers}
-                    title="Gestione utenti e approvazione iscrizioni"
-                  >
-                    <Users size={16} />
-                    <span>Utenti</span>
-                    {pendingCount > 0 && (
-                      <span className="pending-notification-badge" title={`${pendingCount} utenti in attesa di approvazione`}>
-                        {pendingCount}
-                      </span>
-                    )}
-                  </button>
-                </>
-              )}
-
-              {/* Bottoni esclusivi Admin */}
-              {isAdmin && (
                 <button
-                  className="btn btn-outline btn-sm"
-                  onClick={onOpenSettings}
-                  title="Configura numero partenti e costi stimati"
+                  className="btn btn-primary btn-sm"
+                  onClick={onOpenNewInitiative}
+                  title="Aggiungi una nuova attività"
                 >
-                  <Sliders size={16} />
-                  <span>Partenti & Quote</span>
+                  <PlusCircle size={15} />
+                  <span>Nuova Attività</span>
                 </button>
               )}
 
-              {/* Toggle Tema Dark / Light */}
+              {/* Toggle Tema Luminoso / Notte */}
               <button
-                className="btn btn-ghost btn-icon-only"
+                className="btn btn-outline btn-icon-only"
                 onClick={toggleTheme}
-                title={theme === 'dark' ? 'Passa alla modalità chiara' : 'Passa alla modalità scura'}
+                title={theme === 'dark' ? 'Passa alla modalità luminosa' : 'Passa alla modalità notte'}
               >
                 {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
               </button>
@@ -114,17 +119,16 @@ export default function Navbar({
               <button
                 className="btn btn-ghost btn-sm"
                 onClick={logout}
-                title="Disconnetti"
+                title="Esci dal portale"
               >
                 <LogOut size={16} />
-                <span style={{ display: 'none', '@media (minWidth: 640px)': { display: 'inline' } }}>Esci</span>
+                <span>Esci</span>
               </button>
             </>
           ) : (
             <>
-              {/* Toggle Tema */}
               <button
-                className="btn btn-ghost btn-icon-only"
+                className="btn btn-outline btn-icon-only"
                 onClick={toggleTheme}
                 title="Cambia tema"
               >
@@ -133,7 +137,7 @@ export default function Navbar({
 
               <button className="btn btn-primary btn-sm" onClick={onOpenAuth}>
                 <LogIn size={16} />
-                <span>Accedi / Registrati</span>
+                <span>Accedi o Registrati</span>
               </button>
             </>
           )}
