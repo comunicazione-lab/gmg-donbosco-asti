@@ -35,6 +35,8 @@ export default function AuthModal({ isOpen, onClose, initialToken = null }) {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [forgotSentSuccess, setForgotSentSuccess] = useState(false);
+  const [emailSentSuccess, setEmailSentSuccess] = useState(true);
+  const [displayBackupCode, setDisplayBackupCode] = useState(null);
 
   const [loading, setLoading] = useState(false);
 
@@ -92,6 +94,8 @@ export default function AuthModal({ isOpen, onClose, initialToken = null }) {
       setResetCode('');
       setNewPassword('');
       setConfirmPassword('');
+      setEmailSentSuccess(result.emailSent !== false);
+      setDisplayBackupCode(result.backupCode || null);
       setForgotSentSuccess(true);
       setMode('reset');
     }
@@ -197,15 +201,15 @@ export default function AuthModal({ isOpen, onClose, initialToken = null }) {
               <div className="form-group">
                 <label className="form-label">
                   <Mail size={14} style={{ display: 'inline', marginRight: '4px' }} />
-                  Indirizzo Email
+                  Indirizzo Email o Nome Utente
                 </label>
                 <input
-                  type="email"
+                  type="text"
                   className="form-input"
-                  placeholder="es. marco@donboscoasti.it"
+                  placeholder="es. imparato.donbosco@gmail.com oppure leo_impa02"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  autoComplete="email"
+                  autoComplete="username"
                   required
                 />
               </div>
@@ -312,7 +316,7 @@ export default function AuthModal({ isOpen, onClose, initialToken = null }) {
           {/* ==================== 3. FORM RESET PASSWORD (CODICE / TOKEN) ==================== */}
           {mode === 'reset' && (
             <form onSubmit={handleResetSubmit}>
-              {forgotSentSuccess && (
+              {forgotSentSuccess && emailSentSuccess && (
                 <div
                   style={{
                     background: 'rgba(16, 185, 129, 0.1)',
@@ -326,6 +330,48 @@ export default function AuthModal({ isOpen, onClose, initialToken = null }) {
                   }}
                 >
                   ✅ Email inviata da <strong>noreply@dbasti.com</strong> a <strong>{email}</strong>! Inserisci il codice a 6 cifre ricevuto e scegli la tua nuova password.
+                </div>
+              )}
+
+              {forgotSentSuccess && !emailSentSuccess && displayBackupCode && (
+                <div
+                  style={{
+                    background: 'rgba(245, 158, 11, 0.12)',
+                    border: '1px solid rgba(245, 158, 11, 0.35)',
+                    borderRadius: 'var(--radius-sm)',
+                    padding: '14px 16px',
+                    marginBottom: '16px',
+                    fontSize: '0.84rem',
+                    color: '#b45309',
+                    lineHeight: 1.5
+                  }}
+                >
+                  <div style={{ fontWeight: 700, marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span>⚠️</span>
+                    <span>Server cloud con porte SMTP bloccate (Render Free)</span>
+                  </div>
+                  <p style={{ margin: '4px 0 8px 0', fontSize: '0.8rem', color: '#92400e' }}>
+                    Il provider cloud Render blocca le porte email SMTP verso l'esterno. Per consentirti di procedere subito senza bloccarti, ecco il tuo codice di verifica generato:
+                  </p>
+                  <div
+                    style={{
+                      fontSize: '1.6rem',
+                      fontWeight: 800,
+                      letterSpacing: '0.25em',
+                      textAlign: 'center',
+                      background: 'rgba(255, 255, 255, 0.85)',
+                      padding: '8px 12px',
+                      borderRadius: '8px',
+                      color: '#b45309',
+                      fontFamily: 'monospace',
+                      userSelect: 'all'
+                    }}
+                  >
+                    {displayBackupCode}
+                  </div>
+                  <div style={{ fontSize: '0.74rem', textAlign: 'center', marginTop: '6px', color: '#78350f' }}>
+                    Digitalo nel campo qui sotto per scegliere la tua nuova password.
+                  </div>
                 </div>
               )}
 

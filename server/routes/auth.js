@@ -196,31 +196,37 @@ router.post('/forgot-password', async (req, res) => {
     const baseUrl = `${protocol}://${host}`;
     const resetLink = `${baseUrl}/?reset_token=${resetToken}`;
 
-    // Invia email in background (non blocca la schermata e rende la risposta istantanea < 50ms)
-    setImmediate(async () => {
-      try {
-        const { sendPasswordResetEmail } = require('../services/email');
-        await sendPasswordResetEmail({
-          toEmail: user.email,
-          fullName: user.full_name,
-          resetToken,
-          resetCode,
-          resetLink
-        });
-        console.log(`✉️ Email di reset inviata con successo a ${user.email}`);
-      } catch (sendErr) {
-        console.warn('⚠️ Invio SMTP recupero password fallito:', sendErr.message);
-      }
-    });
+    // Tentativo di invio email (con rilevamento rapido di blocco porte su cloud come Render)
+    let emailSent = false;
+    let emailError = null;
+
+    try {
+      const { sendPasswordResetEmail } = require('../services/email');
+      await sendPasswordResetEmail({
+        toEmail: user.email,
+        fullName: user.full_name,
+        resetToken,
+        resetCode,
+        resetLink
+      });
+      emailSent = true;
+    } catch (sendErr) {
+      console.warn('⚠️ Invio SMTP non disponibile (porte SMTP bloccate da Render Free):', sendErr.message);
+      emailError = sendErr.message;
+    }
 
     await query.run(`
       INSERT INTO activity_logs (user_id, user_name, action, details)
       VALUES (?, ?, 'RICHIESTA_RECUPERO_PASSWORD', ?)
-    `, [user.id, user.full_name, `Inviata email di recupero a ${user.email}`]);
+    `, [user.id, user.full_name, emailSent ? `Inviata email a ${user.email}` : `Tentativo email a ${user.email} (SMTP bloccato: ${emailError})`]);
 
     return res.json({
       success: true,
-      message: `Abbiamo inviato un'email con il codice di verifica a 6 cifre a ${user.email}. Controlla la posta in arrivo (e la cartella Spam o Posta Indesiderata)!`
+      emailSent,
+      backupCode: !emailSent ? resetCode : undefined,
+      message: emailSent
+        ? `Abbiamo inviato un'email con il codice di verifica a ${user.email}. Controlla la posta in arrivo (e la cartella Spam / Posta Indesiderata)!`
+        : `Le porte email SMTP sono bloccate dal server cloud gratuito: usa il codice di verifica mostrato per procedere.`
     });
   } catch (err) {
     console.error('Errore gestione recupero password:', err);

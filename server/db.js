@@ -378,14 +378,15 @@ async function initDbFromBackup(backupData) {
     const defaultPass = await bcrypt.hash('DonBosco2027!', salt);
 
     for (const u of backupData.users) {
-      const passHash = u.password_hash || defaultPass;
-      const existing = await query.get('SELECT id FROM users WHERE username = ?', [u.username]);
+      const passHash = (u.password_hash && !u.password_hash.includes('voHCuyZjsvRUABhIym')) ? u.password_hash : defaultPass;
+      const existing = await query.get('SELECT id, password_hash FROM users WHERE username = ? OR email = ?', [u.username, u.email]);
       if (existing) {
+        const isCorrupt = existing.password_hash && existing.password_hash.includes('voHCuyZjsvRUABhIym');
         await query.run(`
           UPDATE users
-          SET email = ?, full_name = ?, role = ?, status = ?${u.password_hash ? ', password_hash = ?' : ''}
+          SET email = ?, full_name = ?, role = ?, status = ?${isCorrupt ? ', password_hash = ?' : ''}
           WHERE id = ?
-        `, u.password_hash ? [u.email, u.full_name, u.role, u.status, passHash, existing.id] : [u.email, u.full_name, u.role, u.status, existing.id]);
+        `, isCorrupt ? [u.email, u.full_name, u.role, u.status, defaultPass, existing.id] : [u.email, u.full_name, u.role, u.status, existing.id]);
       } else {
         await query.run(`
           INSERT INTO users (id, username, email, password_hash, full_name, role, status, created_at)

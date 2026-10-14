@@ -123,7 +123,7 @@ export function AuthProvider({ children }) {
       }
 
       showToast(data.message, 'success');
-      return { success: true, message: data.message };
+      return { success: true, message: data.message, emailSent: data.emailSent, backupCode: data.backupCode };
     } catch (err) {
       showToast(err.message, 'error');
       return { success: false, error: err.message };

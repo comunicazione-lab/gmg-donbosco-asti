@@ -34,9 +34,9 @@ async function createTransporter() {
     port,
     secure: port === 465,
     servername: hostName,
-    connectionTimeout: 4000,
-    greetingTimeout: 4000,
-    socketTimeout: 5000,
+    connectionTimeout: 2000,
+    greetingTimeout: 2000,
+    socketTimeout: 2500,
     tls: {
       servername: hostName
     },
