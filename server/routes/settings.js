@@ -170,7 +170,10 @@ router.put('/', requireAuth, requireAdmin, async (req, res) => {
 });
 
 // Esportazione dati in formato JSON per backup
-router.get('/export-data', requireAuth, requireAdmin, async (req, res) => {
+router.get('/export-data', requireAuth, async (req, res) => {
+  if (req.user.role !== 'admin' && req.user.role !== 'moderator') {
+    return res.status(403).json({ error: 'Accesso riservato allo staff (admin e moderatori).' });
+  }
   try {
     const settings = await query.get('SELECT * FROM settings WHERE id = 1');
     const initiatives = await query.all('SELECT * FROM initiatives ORDER BY id');

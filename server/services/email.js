@@ -1,9 +1,10 @@
 const nodemailer = require('nodemailer');
 const dns = require('dns');
+const https = require('https');
 
 /**
  * Risolve dinamicamente l'hostname SMTP su IPv4 per evitare
- * errori di connessione IPv6 (EHOSTUNREACH) su reti locali o container.
+ * problemi EHOSTUNREACH su sistemi con IPv6 non instradato.
  */
 function resolveIpv4(hostname) {
   return new Promise((resolve) => {
@@ -31,11 +32,11 @@ async function createTransporter() {
   return nodemailer.createTransport({
     host: resolvedHost,
     port,
-    secure: true,
+    secure: port === 465,
     servername: hostName,
-    connectionTimeout: 5000,
-    greetingTimeout: 5000,
-    socketTimeout: 6000,
+    connectionTimeout: 4000,
+    greetingTimeout: 4000,
+    socketTimeout: 5000,
     tls: {
       servername: hostName
     },
@@ -47,13 +48,26 @@ async function createTransporter() {
 }
 
 /**
- * Invia email HTML con grafica moderna Salesiana Don Bosco per il recupero password
+ * Funzione generica per invio email
  */
-async function sendPasswordResetEmail({ toEmail, fullName, resetToken, resetCode, resetLink }) {
-  const transporter = await createTransporter();
+async function sendMailGeneric({ to, subject, text, html }) {
   const fromName = process.env.EMAIL_FROM_NAME || 'Oratorio Salesiano Don Bosco Asti';
   const fromAddress = process.env.SMTP_USER || 'noreply@dbasti.com';
 
+  const transporter = await createTransporter();
+  return await transporter.sendMail({
+    from: `"${fromName}" <${fromAddress}>`,
+    to: Array.isArray(to) ? to.join(', ') : to,
+    subject,
+    text,
+    html
+  });
+}
+
+/**
+ * Invia email HTML per il recupero password
+ */
+async function sendPasswordResetEmail({ toEmail, fullName, resetToken, resetCode, resetLink }) {
   const htmlContent = `
 <!DOCTYPE html>
 <html lang="it">
@@ -114,7 +128,7 @@ async function sendPasswordResetEmail({ toEmail, fullName, resetToken, resetCode
                       ${resetCode}
                     </span>
                     <span style="display: block; font-size: 12px; color: #94a3b8; margin-top: 6px;">
-                      Puoi inserire questo codice direttamente nella schermata del sito
+                      Inserisci questo codice direttamente nella schermata del sito
                     </span>
                   </td>
                 </tr>
@@ -177,8 +191,7 @@ Il codice e il link sono validi per 60 minuti.
 Se non hai richiesto tu il ripristino, puoi ignorare questa email.
   `;
 
-  return await transporter.sendMail({
-    from: `"${fromName}" <${fromAddress}>`,
+  return await sendMailGeneric({
     to: toEmail,
     subject: `🔐 Codice di Recupero Password: ${resetCode} • Portale GMG Don Bosco Asti`,
     text: textContent,
@@ -186,7 +199,128 @@ Se non hai richiesto tu il ripristino, puoi ignorare questa email.
   });
 }
 
+/**
+ * Invia email di notifica agli amministratori e moderatori quando un nuovo utente si registra
+ */
+async function sendNewUserRegistrationNotification({ newUser, adminEmails, baseUrl }) {
+  if (!adminEmails || adminEmails.length === 0) return;
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nuova Registrazione da Approvare - GMG Seoul 2027</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; padding: 30px 15px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" style="max-width: 580px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0;" cellspacing="0" cellpadding="0">
+          
+          <!-- Header Salesiano GMG -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #059669 0%, #2563eb 100%); padding: 30px 25px; text-align: center;">
+              <div style="background-color: #ffffff; color: #059669; width: 48px; height: 48px; border-radius: 12px; line-height: 48px; font-size: 20px; font-weight: 800; margin: 0 auto 10px auto;">
+                🔔
+              </div>
+              <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 800;">
+                Nuova Richiesta di Registrazione
+              </h1>
+              <p style="color: rgba(255, 255, 255, 0.9); margin: 6px 0 0 0; font-size: 13px;">
+                Portale GMG Seoul 2027 • Don Bosco Asti
+              </p>
+            </td>
+          </tr>
+
+          <!-- Content Body -->
+          <tr>
+            <td style="padding: 30px 25px;">
+              <p style="margin: 0 0 16px 0; font-size: 15px; line-height: 1.6; color: #334155;">
+                Ciao Staff Don Bosco,
+              </p>
+              <p style="margin: 0 0 20px 0; font-size: 15px; line-height: 1.6; color: #334155;">
+                un nuovo utente ha appena completato la registrazione sul portale e <strong>è in attesa della vostra approvazione</strong> per poter accedere alle iniziative e alle quote della GMG:
+              </p>
+
+              <!-- Dati Utente -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f1f5f9; border-radius: 12px; padding: 18px 20px; margin-bottom: 24px; border: 1px solid #e2e8f0;">
+                <tr>
+                  <td style="padding: 6px 0; font-size: 14px; color: #64748b; width: 140px;">Nome e Cognome:</td>
+                  <td style="padding: 6px 0; font-size: 15px; font-weight: 700; color: #0f172a;">${newUser.full_name}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 6px 0; font-size: 14px; color: #64748b;">Email di Accesso:</td>
+                  <td style="padding: 6px 0; font-size: 14px; font-weight: 600; color: #2563eb;">${newUser.email}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 6px 0; font-size: 14px; color: #64748b;">Nome Utente:</td>
+                  <td style="padding: 6px 0; font-size: 14px; color: #334155;">@${newUser.username}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 6px 0; font-size: 14px; color: #64748b;">Data Richiesta:</td>
+                  <td style="padding: 6px 0; font-size: 14px; color: #334155;">${newUser.created_at}</td>
+                </tr>
+              </table>
+
+              <!-- CTA Button -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin: 25px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="${baseUrl}" target="_blank" style="display: inline-block; background-color: #059669; color: #ffffff; text-decoration: none; font-size: 15px; font-weight: 700; padding: 14px 28px; border-radius: 10px; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);">
+                      Apri il Portale per Approvare →
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin: 15px 0 0 0; font-size: 13px; line-height: 1.5; color: #64748b; text-align: center;">
+                Accedi con il tuo account staff nella scheda <strong>"Approvazione Utenti"</strong> per convalidare o rifiutare la richiesta.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 20px 25px; text-align: center;">
+              <p style="margin: 0; font-size: 12px; color: #94a3b8;">
+                Notifica automatica inviata da noreply@dbasti.com allo staff dell'Oratorio Don Bosco Asti
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `;
+
+  const textContent = `
+🔔 Nuova Richiesta di Registrazione GMG Seoul 2027 • Don Bosco Asti
+
+Un nuovo utente ha completato la registrazione ed è in attesa di approvazione:
+- Nome e Cognome: ${newUser.full_name}
+- Email: ${newUser.email}
+- Nome Utente: @${newUser.username}
+- Data: ${newUser.created_at}
+
+Accedi al portale per approvare la richiesta:
+${baseUrl}
+  `;
+
+  return await sendMailGeneric({
+    to: adminEmails,
+    subject: `🔔 Nuova Registrazione GMG da Approvare: ${newUser.full_name} • Don Bosco Asti`,
+    text: textContent,
+    html: htmlContent
+  });
+}
+
 module.exports = {
   createTransporter,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  sendNewUserRegistrationNotification
 };

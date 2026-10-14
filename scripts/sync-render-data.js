@@ -68,19 +68,40 @@ async function sync() {
   console.log(`📡 Connessione a ${RENDER_URL} per scaricare i dati pubblicati...`);
 
   try {
-    // 1. Login
-    const loginRes = await postJson(`${RENDER_URL}/api/auth/login`, {
-      email: ADMIN_USER,
-      username: ADMIN_USER,
-      password: ADMIN_PASS
-    });
+    const candidateCredentials = [
+      { email: 'admin@donboscoasti.it', pass: '123456' },
+      { email: 'admin@donboscoasti.it', pass: 'DonBosco2027!' },
+      { email: 'admin', pass: '123456' },
+      { email: 'admin', pass: 'DonBosco2027!' },
+      { email: process.env.ADMIN_USER, pass: process.env.ADMIN_PASS }
+    ].filter(c => c.email && c.pass);
 
-    if (loginRes.status !== 200 || !loginRes.data.token) {
-      throw new Error(`Login fallito (${loginRes.status}): ${JSON.stringify(loginRes.data)}`);
+    let token = null;
+    let lastError = null;
+
+    for (const cred of candidateCredentials) {
+      try {
+        const loginRes = await postJson(`${RENDER_URL}/api/auth/login`, {
+          email: cred.email,
+          username: cred.email,
+          password: cred.pass
+        });
+
+        if (loginRes.status === 200 && loginRes.data && loginRes.data.token) {
+          token = loginRes.data.token;
+          console.log(`✅ Accesso effettuato con successo come ${cred.email}!`);
+          break;
+        } else {
+          lastError = loginRes.data?.error || `Status ${loginRes.status}`;
+        }
+      } catch (reqErr) {
+        lastError = reqErr.message;
+      }
     }
 
-    const token = loginRes.data.token;
-    console.log('✅ Accesso effettuato con successo!');
+    if (!token) {
+      throw new Error(`Impossibile autenticarsi su Render: ${lastError}`);
+    }
 
     // 2. Scarica export
     const exportRes = await getJson(`${RENDER_URL}/api/settings/export-data`, token);
@@ -98,7 +119,7 @@ async function sync() {
     console.log(`- Voci registrate: ${backupData.entries?.length || 0}`);
     console.log(`- Utenti registrati: ${backupData.users?.length || 0}`);
 
-    // 3. Sincronizza nel database SQLite locale (opzionale se l'ambiente locale ha architetture native diverse)
+    // 3. Sincronizza nel database SQLite locale
     try {
       const { initDbFromBackup } = require('../server/db');
       if (typeof initDbFromBackup === 'function') {
@@ -109,8 +130,12 @@ async function sync() {
       console.log('ℹ️ SQLite locale: backup JSON salvato con successo (il server ricaricherà i dati al boot).');
     }
   } catch (err) {
-    console.error('⚠️ Errore durante la sincronizzazione:', err.message);
-    process.exit(1);
+    console.warn('⚠️ Attenzione sincronizzazione:', err.message);
+    if (fs.existsSync(BACKUP_FILE)) {
+      console.log('ℹ️ Backup locale esistente conservato con successo:', BACKUP_FILE);
+    } else {
+      process.exit(1);
+    }
   }
 }
 

@@ -89,9 +89,9 @@ export default function AuthModal({ isOpen, onClose, initialToken = null }) {
     const result = await forgotPassword(email.trim());
     setLoading(false);
     if (result.success) {
-      if (result.backupCode) {
-        setResetCode(result.backupCode);
-      }
+      setResetCode('');
+      setNewPassword('');
+      setConfirmPassword('');
       setForgotSentSuccess(true);
       setMode('reset');
     }
@@ -223,6 +223,7 @@ export default function AuthModal({ isOpen, onClose, initialToken = null }) {
                     onClick={() => {
                       setMode('forgot');
                       setForgotSentSuccess(false);
+                      setResetCode('');
                     }}
                   >
                     Password dimenticata?

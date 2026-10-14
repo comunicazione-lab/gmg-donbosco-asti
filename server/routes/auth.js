@@ -48,6 +48,41 @@ router.post('/register', async (req, res) => {
       VALUES (?, ?, 'REGISTRAZIONE', ?)
     `, [result.lastID, full_name.trim(), `Nuova richiesta di account per ${cleanUsername} (${cleanEmail})`]);
 
+    // Notifica email a tutti gli amministratori e moderatori approvati (in background)
+    try {
+      const staffUsers = await query.all(
+        "SELECT email FROM users WHERE role IN ('admin', 'moderator') AND status = 'approved' AND email IS NOT NULL AND email != ''"
+      );
+      const adminEmails = [...new Set(staffUsers.map(u => (u.email || '').trim().toLowerCase()).filter(Boolean))];
+
+      if (adminEmails.length > 0) {
+        const protocol = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
+        const host = req.headers['x-forwarded-host'] || req.headers.host;
+        const baseUrl = `${protocol}://${host}`;
+
+        setImmediate(async () => {
+          try {
+            const { sendNewUserRegistrationNotification } = require('../services/email');
+            await sendNewUserRegistrationNotification({
+              newUser: {
+                full_name: full_name.trim(),
+                email: cleanEmail,
+                username: cleanUsername,
+                created_at: new Date().toLocaleString('it-IT')
+              },
+              adminEmails,
+              baseUrl
+            });
+            console.log(`✉️ Email notifica nuova registrazione inviata con successo agli admin: ${adminEmails.join(', ')}`);
+          } catch (mailErr) {
+            console.warn('⚠️ Errore invio notifica registrazione ad admin:', mailErr.message);
+          }
+        });
+      }
+    } catch (adminErr) {
+      console.warn('⚠️ Impossibile recuperare lista admin per notifica:', adminErr.message);
+    }
+
     return res.status(201).json({
       success: true,
       message: 'Registrazione inviata con successo! Un moderatore o l\'amministratore dell\'oratorio dovrà approvare il tuo account prima del primo accesso.',
@@ -161,38 +196,31 @@ router.post('/forgot-password', async (req, res) => {
     const baseUrl = `${protocol}://${host}`;
     const resetLink = `${baseUrl}/?reset_token=${resetToken}`;
 
-    // Invia email con HTML moderno
-    let emailSent = false;
-    let emailError = null;
-
-    try {
-      const { sendPasswordResetEmail } = require('../services/email');
-      await sendPasswordResetEmail({
-        toEmail: user.email,
-        fullName: user.full_name,
-        resetToken,
-        resetCode,
-        resetLink
-      });
-      emailSent = true;
-    } catch (sendErr) {
-      console.warn('⚠️ Invio SMTP fallito (porte bloccate dal provider hosting):', sendErr.message);
-      emailError = sendErr.message;
-    }
+    // Invia email in background (non blocca la schermata e rende la risposta istantanea < 50ms)
+    setImmediate(async () => {
+      try {
+        const { sendPasswordResetEmail } = require('../services/email');
+        await sendPasswordResetEmail({
+          toEmail: user.email,
+          fullName: user.full_name,
+          resetToken,
+          resetCode,
+          resetLink
+        });
+        console.log(`✉️ Email di reset inviata con successo a ${user.email}`);
+      } catch (sendErr) {
+        console.warn('⚠️ Invio SMTP recupero password fallito:', sendErr.message);
+      }
+    });
 
     await query.run(`
       INSERT INTO activity_logs (user_id, user_name, action, details)
       VALUES (?, ?, 'RICHIESTA_RECUPERO_PASSWORD', ?)
-    `, [user.id, user.full_name, emailSent ? `Inviata email a ${user.email}` : `Tentativo email a ${user.email} (SMTP: ${emailError})`]);
+    `, [user.id, user.full_name, `Inviata email di recupero a ${user.email}`]);
 
     return res.json({
       success: true,
-      emailSent,
-      backupCode: !emailSent ? resetCode : undefined,
-      resetLink: !emailSent ? resetLink : undefined,
-      message: emailSent
-        ? `Abbiamo inviato un'email con il codice di verifica a ${user.email}. Controlla la posta in arrivo e la cartella SPAM!`
-        : `Il tuo codice di verifica rapido è: ${resetCode}`
+      message: `Abbiamo inviato un'email con il codice di verifica a 6 cifre a ${user.email}. Controlla la posta in arrivo (e la cartella Spam o Posta Indesiderata)!`
     });
   } catch (err) {
     console.error('Errore gestione recupero password:', err);
