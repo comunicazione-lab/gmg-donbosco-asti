@@ -1,5 +1,5 @@
 {
-  "export_date": "2026-10-14T14:39:47.776Z",
+  "export_date": "2026-10-14T15:08:31.101Z",
   "oratory": "Oratorio Salesiano Don Bosco - Asti",
   "event": "GMG Seoul 2027 - Corea del Sud",
   "settings": {
@@ -32,6 +32,7 @@
       "id": 1,
       "username": "admin",
       "email": "admin@donboscoasti.it",
+      "password_hash": "$2b$10$voHCuyZjsvRUABhIym/0bOuDeUzqC52QW/hsasUstoTQUP57pKeBa",
       "full_name": "Don Marco (Parroco & Admin)",
       "role": "admin",
       "status": "approved",
@@ -41,6 +42,7 @@
       "id": 5,
       "username": "leo_impa02",
       "email": "imparato.donbosco@gmail.com",
+      "password_hash": "$2b$10$voHCuyZjsvRUABhIym/0bOuDeUzqC52QW/hsasUstoTQUP57pKeBa",
       "full_name": "Leonardo Imparato",
       "role": "admin",
       "status": "approved",
@@ -50,6 +52,7 @@
       "id": 6,
       "username": "giovane",
       "email": "giovane@p.it",
+      "password_hash": "$2b$10$voHCuyZjsvRUABhIym/0bOuDeUzqC52QW/hsasUstoTQUP57pKeBa",
       "full_name": "giovane",
       "role": "user",
       "status": "approved",

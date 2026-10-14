@@ -34,6 +34,22 @@ export default function App() {
   const [initiativeToEdit, setInitiativeToEdit] = useState(null);
   const [selectedInitiativeId, setSelectedInitiativeId] = useState(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [resetTokenUrl, setResetTokenUrl] = useState(null);
+
+  // Rilevamento automatico link di ripristino password da email (?reset_token=...)
+  useEffect(() => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const tokenFromUrl = urlParams.get('reset_token');
+      if (tokenFromUrl) {
+        setResetTokenUrl(tokenFromUrl);
+        setIsAuthModalOpen(true);
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
 
   // Gestione Tema (Default: Light / Solare)
   const [theme, setTheme] = useState(() => localStorage.getItem('gmg_theme') || 'light');
@@ -403,10 +419,14 @@ export default function App() {
         />
       )}
 
-      {/* Modale Autenticazione (Senza profili demo) */}
+      {/* Modale Autenticazione & Recupero Password */}
       <AuthModal
         isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
+        onClose={() => {
+          setIsAuthModalOpen(false);
+          setResetTokenUrl(null);
+        }}
+        initialToken={resetTokenUrl}
       />
     </div>
   );

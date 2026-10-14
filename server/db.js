@@ -135,6 +135,21 @@ async function initDb() {
     );
   `);
 
+  // 6. Tabella Richieste Recupero Password
+  await query.exec(`
+    CREATE TABLE IF NOT EXISTS password_resets (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      email TEXT NOT NULL,
+      token TEXT NOT NULL,
+      code TEXT NOT NULL,
+      expires_at DATETIME NOT NULL,
+      used INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+  `);
+
   // Ripristino prioritario dal backup live scaricato da Render
   const backupPath = path.join(__dirname, '../data/live_render_backup.json');
   if (fs.existsSync(backupPath)) {

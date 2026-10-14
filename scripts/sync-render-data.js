@@ -70,6 +70,7 @@ async function sync() {
   try {
     // 1. Login
     const loginRes = await postJson(`${RENDER_URL}/api/auth/login`, {
+      email: ADMIN_USER,
       username: ADMIN_USER,
       password: ADMIN_PASS
     });

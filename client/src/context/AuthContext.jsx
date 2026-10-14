@@ -82,13 +82,13 @@ export function AuthProvider({ children }) {
     return () => clearInterval(interval);
   }, [token, user]);
 
-  // Login
-  const login = async (username, password) => {
+  // Login (esclusivamente con Email)
+  const login = async (email, password) => {
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ email: email.trim().toLowerCase(), password })
       });
 
       const data = await res.json();
@@ -102,6 +102,71 @@ export function AuthProvider({ children }) {
       setUser(data.user);
       showToast(`Bentornato, ${data.user.full_name}!`, 'success');
       return { success: true };
+    } catch (err) {
+      showToast(err.message, 'error');
+      return { success: false, error: err.message };
+    }
+  };
+
+  // Richiesta recupero password
+  const forgotPassword = async (email) => {
+    try {
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim().toLowerCase() })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Errore durante l\'invio del link di recupero');
+      }
+
+      showToast(data.message, 'success');
+      return { success: true, message: data.message };
+    } catch (err) {
+      showToast(err.message, 'error');
+      return { success: false, error: err.message };
+    }
+  };
+
+  // Verifica codice a 6 cifre o token
+  const verifyResetCode = async ({ email, code, token }) => {
+    try {
+      const res = await fetch('/api/auth/verify-reset-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, code, token })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Codice non valido o scaduto');
+      }
+
+      return { success: true, data };
+    } catch (err) {
+      showToast(err.message, 'error');
+      return { success: false, error: err.message };
+    }
+  };
+
+  // Conferma nuova password
+  const resetPassword = async ({ token, email, code, new_password }) => {
+    try {
+      const res = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, email, code, new_password })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Errore durante l\'aggiornamento della password');
+      }
+
+      showToast(data.message, 'success');
+      return { success: true, message: data.message };
     } catch (err) {
       showToast(err.message, 'error');
       return { success: false, error: err.message };
@@ -156,6 +221,9 @@ export function AuthProvider({ children }) {
         login,
         register,
         logout,
+        forgotPassword,
+        verifyResetCode,
+        resetPassword,
         showToast,
         pendingCount,
         refreshPendingCount: fetchPendingCount
