@@ -175,7 +175,7 @@ router.get('/export-data', requireAuth, requireAdmin, async (req, res) => {
     const settings = await query.get('SELECT * FROM settings WHERE id = 1');
     const initiatives = await query.all('SELECT * FROM initiatives ORDER BY id');
     const entries = await query.all('SELECT * FROM initiative_entries ORDER BY id');
-    const users = await query.all('SELECT id, username, email, full_name, role, status, created_at FROM users');
+    const users = await query.all('SELECT id, username, email, password_hash, full_name, role, status, created_at FROM users');
 
     const exportPayload = {
       export_date: new Date().toISOString(),

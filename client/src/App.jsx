@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Navbar from './components/Navbar';
 import HeroBanner from './components/HeroBanner';
-import DashboardStats from './components/DashboardStats';
+import DashboardStats, { HeroDiscountCard, FundraisingTotalsCards } from './components/DashboardStats';
 import DiscountSimulator from './components/DiscountSimulator';
 import FinancialCharts from './components/FinancialCharts';
 import InitiativeCard from './components/InitiativeCard';
@@ -170,8 +170,8 @@ export default function App() {
       />
 
       <main className="app-container">
-        {/* Banner GMG Seoul 2027 */}
-        <HeroBanner />
+        {/* Banner GMG Seoul 2027: visibile solo in homepage (non autenticato) e nella dashboard */}
+        {(!isAuthenticated || activeSection === 'dashboard') && <HeroBanner />}
 
         {!isAuthenticated ? (
           /* Vista Utenti non autenticati */
@@ -227,6 +227,10 @@ export default function App() {
             {/* 2. SEZIONE RACCOLTA FONDI */}
             {activeSection === 'fundraising' && (
               <div>
+                {/* 4 Card Totali in Cima alla Scheda Raccolta Fondi:
+                    Fondo Netto Raccolto, Totale Entrate Lorde, Totale Spese Sostenute, Iniziative Totali */}
+                <FundraisingTotalsCards metrics={metrics} />
+
                 <div className="section-header">
                   <div>
                     <h2 className="section-title">

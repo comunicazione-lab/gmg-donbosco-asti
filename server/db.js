@@ -135,7 +135,20 @@ async function initDb() {
     );
   `);
 
-  // Seed delle impostazioni
+  // Ripristino prioritario dal backup live scaricato da Render
+  const backupPath = path.join(__dirname, '../data/live_render_backup.json');
+  if (fs.existsSync(backupPath)) {
+    try {
+      const backupData = JSON.parse(fs.readFileSync(backupPath, 'utf-8'));
+      await initDbFromBackup(backupData);
+      console.log('Database inizializzato con successo dai dati live di Render.');
+      return;
+    } catch (e) {
+      console.error('Errore durante il caricamento del backup live:', e);
+    }
+  }
+
+  // Seed delle impostazioni di fallback (se non esiste backup live)
   const existingSettings = await query.get('SELECT * FROM settings WHERE id = 1');
   if (!existingSettings) {
     const defaultParticipants = 25;
@@ -320,8 +333,103 @@ async function initDb() {
   }
 }
 
+async function initDbFromBackup(backupData) {
+  if (!backupData) return;
+
+  // 1. Settings
+  if (backupData.settings) {
+    const s = backupData.settings;
+    const part = s.participants_count || 8;
+    const cost = s.estimated_cost_per_person || 2200;
+    const target = s.target_fundraising_total || (part * cost);
+
+    await query.run(`
+      INSERT OR REPLACE INTO settings (id, participants_count, estimated_cost_per_person, target_fundraising_total, event_name, oratory_name, currency, updated_at)
+      VALUES (1, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      part,
+      cost,
+      target,
+      s.event_name || 'GMG Seoul 2027 - Corea del Sud',
+      s.oratory_name || 'Oratorio Salesiano Don Bosco - Asti',
+      s.currency || '€',
+      s.updated_at || new Date().toISOString()
+    ]);
+  }
+
+  // 2. Users
+  if (Array.isArray(backupData.users) && backupData.users.length > 0) {
+    const salt = await bcrypt.genSalt(10);
+    const defaultPass = await bcrypt.hash('DonBosco2027!', salt);
+
+    for (const u of backupData.users) {
+      const passHash = u.password_hash || defaultPass;
+      const existing = await query.get('SELECT id FROM users WHERE username = ?', [u.username]);
+      if (existing) {
+        await query.run(`
+          UPDATE users
+          SET email = ?, full_name = ?, role = ?, status = ?${u.password_hash ? ', password_hash = ?' : ''}
+          WHERE id = ?
+        `, u.password_hash ? [u.email, u.full_name, u.role, u.status, passHash, existing.id] : [u.email, u.full_name, u.role, u.status, existing.id]);
+      } else {
+        await query.run(`
+          INSERT INTO users (id, username, email, password_hash, full_name, role, status, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `, [u.id || null, u.username, u.email, passHash, u.full_name, u.role, u.status, u.created_at || new Date().toISOString()]);
+      }
+    }
+  }
+
+  // 3. Initiatives
+  if (Array.isArray(backupData.initiatives) && backupData.initiatives.length > 0) {
+    await query.run('DELETE FROM initiative_entries');
+    await query.run('DELETE FROM initiatives');
+
+    for (const init of backupData.initiatives) {
+      await query.run(`
+        INSERT INTO initiatives (id, title, description, category, status, event_date, location, created_by, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        init.id,
+        init.title,
+        init.description || '',
+        init.category || 'Generale',
+        init.status || 'in_corso',
+        init.event_date,
+        init.location || 'Oratorio Don Bosco Asti',
+        init.created_by,
+        init.created_at || new Date().toISOString(),
+        init.updated_at || new Date().toISOString()
+      ]);
+    }
+  }
+
+  // 4. Entries
+  if (Array.isArray(backupData.entries) && backupData.entries.length > 0) {
+    for (const entry of backupData.entries) {
+      await query.run(`
+        INSERT INTO initiative_entries (id, initiative_id, type, title, category, amount, entry_date, notes, created_by, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        entry.id,
+        entry.initiative_id,
+        entry.type,
+        entry.title,
+        entry.category || 'Generale',
+        entry.amount,
+        entry.entry_date,
+        entry.notes || '',
+        entry.created_by,
+        entry.created_at || new Date().toISOString(),
+        entry.updated_at || new Date().toISOString()
+      ]);
+    }
+  }
+}
+
 module.exports = {
   db,
   query,
-  initDb
+  initDb,
+  initDbFromBackup
 };

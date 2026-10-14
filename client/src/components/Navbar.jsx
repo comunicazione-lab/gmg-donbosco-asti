@@ -21,7 +21,7 @@ export default function Navbar({
   theme,
   toggleTheme
 }) {
-  const { user, isAuthenticated, isModerator, logout, pendingCount } = useAuth();
+  const { user, isAuthenticated, isModerator, isAdmin, logout, pendingCount } = useAuth();
 
   return (
     <nav className="navbar">
@@ -61,18 +61,20 @@ export default function Navbar({
               <span>Raccolta Fondi</span>
             </button>
 
-            <button
-              className={`section-tab-btn ${activeSection === 'settings' ? 'active' : ''}`}
-              onClick={() => setActiveSection('settings')}
-            >
-              <Settings size={17} />
-              <span>Impostazioni</span>
-              {pendingCount > 0 && (
-                <span className="section-tab-badge" title={`${pendingCount} utenti da approvare`}>
-                  {pendingCount}
-                </span>
-              )}
-            </button>
+            {(isAdmin || isModerator) && (
+              <button
+                className={`section-tab-btn ${activeSection === 'settings' ? 'active' : ''}`}
+                onClick={() => setActiveSection('settings')}
+              >
+                {isAdmin ? <Settings size={17} /> : <Users size={17} />}
+                <span>{isAdmin ? 'Parametri & Quote' : 'Approvazione Utenti'}</span>
+                {pendingCount > 0 && (
+                  <span className="section-tab-badge" title={`${pendingCount} utenti da approvare`}>
+                    {pendingCount}
+                  </span>
+                )}
+              </button>
+            )}
           </div>
         )}
 

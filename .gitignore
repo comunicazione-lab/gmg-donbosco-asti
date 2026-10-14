@@ -9,3 +9,4 @@ psw.env
 data/*.db
 data/*.db-journal
 !data/.gitkeep
+!data/live_render_backup.json

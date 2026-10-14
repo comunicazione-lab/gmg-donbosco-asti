@@ -20,21 +20,97 @@ export function formatEuro(amount) {
   }).format(amount);
 }
 
-export default function DashboardStats({ metrics, onOpenSettings }) {
+// Card in evidenza con lo Sconto per Persona (mostrata nella Dashboard)
+export function HeroDiscountCard({ metrics, onOpenSettings }) {
   const { isAdmin } = useAuth();
+  if (!metrics) return null;
 
+  const {
+    participants_count = 25,
+    estimated_cost_per_person = 1800,
+    discount_per_participant = 0,
+    remaining_cost_per_participant = 1800,
+    discount_percent = 0
+  } = metrics;
+
+  return (
+    <div className="stat-card hero-discount-card" style={{ marginBottom: '24px' }}>
+      <div>
+        <div className="stat-header">
+          <span className="stat-label">Sconto Attuale per Partecipante</span>
+          <div className="stat-icon red">
+            <Tag size={20} />
+          </div>
+        </div>
+
+        <div className="stat-value highlight">
+          {formatEuro(discount_per_participant)}
+        </div>
+
+        <div className="stat-subtext" style={{ fontSize: '1rem', color: 'var(--text-main)', fontWeight: 600 }}>
+          🎉 Risparmio accumulato per ciascuno degli <strong>{participants_count} ragazzi partenti</strong>
+        </div>
+
+        <div
+          style={{
+            marginTop: '14px',
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '16px',
+            fontSize: '0.88rem',
+            color: 'var(--text-secondary)'
+          }}
+        >
+          <div>
+            <span>Quota stimata viaggio: </span>
+            <strong style={{ color: 'var(--text-main)' }}>{formatEuro(estimated_cost_per_person)}</strong>
+          </div>
+          <div>
+            <span>Quota netta residua: </span>
+            <strong style={{ color: '#2563eb' }}>{formatEuro(remaining_cost_per_participant)}</strong>
+          </div>
+          <div>
+            <span>Abbattimento costo: </span>
+            <strong style={{ color: '#059669' }}>{discount_percent}%</strong>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div className="stat-progress-bar">
+          <div
+            className="stat-progress-fill blue"
+            style={{ width: `${Math.min(100, Math.max(3, discount_percent))}%` }}
+            title={`${discount_percent}% della quota coperto dalla raccolta`}
+          ></div>
+        </div>
+
+        {isAdmin && (
+          <div style={{ marginTop: '14px', display: 'flex', justifyContent: 'flex-end' }}>
+            <button
+              className="btn btn-outline btn-sm"
+              onClick={onOpenSettings}
+              style={{ fontSize: '0.8rem', padding: '5px 12px' }}
+            >
+              <span>Configura n° partenti ({participants_count})</span>
+              <ArrowRight size={14} />
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// 4 Card Totali (Fondo Netto, Entrate, Spese, Iniziative) posizionate in cima a Raccolta Fondi
+export function FundraisingTotalsCards({ metrics }) {
   if (!metrics) return null;
 
   const {
     total_income = 0,
     total_expense = 0,
     net_profit = 0,
-    participants_count = 25,
-    estimated_cost_per_person = 1800,
-    target_fundraising_total = 20000,
-    discount_per_participant = 0,
-    remaining_cost_per_participant = 1800,
-    discount_percent = 0,
+    target_fundraising_total = 45000,
     target_percent = 0,
     initiatives_count = 0,
     completed_count = 0,
@@ -42,75 +118,8 @@ export default function DashboardStats({ metrics, onOpenSettings }) {
   } = metrics;
 
   return (
-    <div className="stats-grid">
-      {/* CARD EROE: SCONTO ATTUALE PER PARTECIPANTE */}
-      <div className="stat-card hero-discount-card">
-        <div>
-          <div className="stat-header">
-            <span className="stat-label">Sconto Attuale per Partecipante</span>
-            <div className="stat-icon red">
-              <Tag size={20} />
-            </div>
-          </div>
-
-          <div className="stat-value highlight">
-            {formatEuro(discount_per_participant)}
-          </div>
-
-          <div className="stat-subtext" style={{ fontSize: '0.95rem', color: '#f8fafc', fontWeight: 500 }}>
-            🎉 Risparmio diretto per ciascuno dei <strong>{participants_count} ragazzi partenti</strong>
-          </div>
-
-          <div
-            style={{
-              marginTop: '12px',
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: '14px',
-              fontSize: '0.85rem',
-              color: '#cbd5e1'
-            }}
-          >
-            <div>
-              <span style={{ color: '#94a3b8' }}>Quota stimata: </span>
-              <strong>{formatEuro(estimated_cost_per_person)}</strong>
-            </div>
-            <div>
-              <span style={{ color: '#94a3b8' }}>Quota netta residua: </span>
-              <strong style={{ color: '#38bdf8' }}>{formatEuro(remaining_cost_per_participant)}</strong>
-            </div>
-            <div>
-              <span style={{ color: '#94a3b8' }}>Abbattimento costo: </span>
-              <strong style={{ color: '#34d399' }}>{discount_percent}%</strong>
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <div className="stat-progress-bar">
-            <div
-              className="stat-progress-fill red"
-              style={{ width: `${Math.min(100, Math.max(2, discount_percent))}%` }}
-              title={`${discount_percent}% della quota coperto dalla raccolta`}
-            ></div>
-          </div>
-
-          {isAdmin && (
-            <div style={{ marginTop: '14px', display: 'flex', justifyContent: 'flex-end' }}>
-              <button
-                className="btn btn-outline btn-sm"
-                onClick={onOpenSettings}
-                style={{ fontSize: '0.78rem', padding: '4px 10px' }}
-              >
-                <span>Cambia n° partenti ({participants_count})</span>
-                <ArrowRight size={14} />
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* CARD 2: UTILE NETTO RACCOLTO */}
+    <div className="stats-grid" style={{ marginBottom: '28px' }}>
+      {/* 1. FONDO NETTO RACCOLTO */}
       <div className="stat-card">
         <div>
           <div className="stat-header">
@@ -120,19 +129,19 @@ export default function DashboardStats({ metrics, onOpenSettings }) {
             </div>
           </div>
 
-          <div className="stat-value" style={{ color: '#10b981' }}>
+          <div className="stat-value" style={{ color: '#059669' }}>
             {formatEuro(net_profit)}
           </div>
 
           <div className="stat-subtext">
-            Entrate totali ({formatEuro(total_income)}) - Spese ({formatEuro(total_expense)})
+            Incassi lordi ({formatEuro(total_income)}) - Spese ({formatEuro(total_expense)})
           </div>
         </div>
 
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', marginTop: '12px' }}>
             <span style={{ color: 'var(--text-muted)' }}>Obiettivo: {formatEuro(target_fundraising_total)}</span>
-            <span style={{ fontWeight: 600, color: '#34d399' }}>{target_percent}%</span>
+            <span style={{ fontWeight: 700, color: '#059669' }}>{target_percent}%</span>
           </div>
           <div className="stat-progress-bar">
             <div
@@ -143,7 +152,7 @@ export default function DashboardStats({ metrics, onOpenSettings }) {
         </div>
       </div>
 
-      {/* CARD 3: TOTALE ENTRATE */}
+      {/* 2. TOTALE ENTRATE LORDE */}
       <div className="stat-card">
         <div>
           <div className="stat-header">
@@ -153,21 +162,21 @@ export default function DashboardStats({ metrics, onOpenSettings }) {
             </div>
           </div>
 
-          <div className="stat-value" style={{ color: '#38bdf8' }}>
+          <div className="stat-value" style={{ color: '#2563eb' }}>
             {formatEuro(total_income)}
           </div>
 
           <div className="stat-subtext">
-            Incassi complessivi generati da cene, bancarelle, donazioni e tornei.
+            Incassi complessivi generati da cene, bancarelle, offerte e tornei.
           </div>
         </div>
 
         <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '10px' }}>
-          📈 Voci di incasso contabilizzate: <strong>{total_entries_count} transazioni</strong>
+          📈 Voci di incasso registrate: <strong>{total_entries_count}</strong>
         </div>
       </div>
 
-      {/* CARD 4: TOTALE SPESE */}
+      {/* 3. TOTALE SPESE SOSTENUTE */}
       <div className="stat-card">
         <div>
           <div className="stat-header">
@@ -177,12 +186,12 @@ export default function DashboardStats({ metrics, onOpenSettings }) {
             </div>
           </div>
 
-          <div className="stat-value" style={{ color: '#fb7185' }}>
+          <div className="stat-value" style={{ color: '#e11d48' }}>
             {formatEuro(total_expense)}
           </div>
 
           <div className="stat-subtext">
-            Costi vivi (ingredienti, materiale, stampe, premi e noleggi).
+            Costi vivi (ingredienti, materiali, premi e tipografia).
           </div>
         </div>
 
@@ -191,7 +200,7 @@ export default function DashboardStats({ metrics, onOpenSettings }) {
         </div>
       </div>
 
-      {/* CARD 5: INIZIATIVE ATTIVE */}
+      {/* 4. INIZIATIVE TOTALI */}
       <div className="stat-card">
         <div>
           <div className="stat-header">
@@ -215,5 +224,13 @@ export default function DashboardStats({ metrics, onOpenSettings }) {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function DashboardStats({ metrics, onOpenSettings }) {
+  return (
+    <>
+      <HeroDiscountCard metrics={metrics} onOpenSettings={onOpenSettings} />
+    </>
   );
 }

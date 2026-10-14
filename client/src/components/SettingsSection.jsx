@@ -315,74 +315,72 @@ export default function SettingsSection({ currentSettings, onSettingsUpdated }) 
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
-      {/* 1. SEZIONE PARAMETRI & QUOTE GMG */}
-      <div className="stat-card" style={{ padding: '28px' }}>
-        <div className="stat-header" style={{ marginBottom: '16px' }}>
-          <div>
-            <h3 style={{ fontSize: '1.35rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <Sliders size={22} style={{ color: '#2563eb' }} />
-              <span>Parametri Ufficiali & Calcolo Quote GMG</span>
-            </h3>
-            <p style={{ fontSize: '0.86rem', color: 'var(--text-secondary)' }}>
-              Imposta il numero dei partenti e la stima dei costi. L'obiettivo totale è impostato di default su <strong>persone × costo per persona</strong>.
-            </p>
+      {/* 1. SEZIONE PARAMETRI & QUOTE GMG (SOLO ADMIN) */}
+      {isAdmin && (
+        <div className="stat-card" style={{ padding: '28px' }}>
+          <div className="stat-header" style={{ marginBottom: '16px' }}>
+            <div>
+              <h3 style={{ fontSize: '1.35rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Sliders size={22} style={{ color: '#2563eb' }} />
+                <span>Parametri Ufficiali & Calcolo Quote GMG</span>
+              </h3>
+              <p style={{ fontSize: '0.86rem', color: 'var(--text-secondary)' }}>
+                Imposta il numero dei partenti e la stima dei costi. L'obiettivo totale è impostato di default su <strong>persone × costo per persona</strong>.
+              </p>
+            </div>
+
+            <button className="btn btn-outline btn-sm" onClick={handleExportBackup} title="Scarica backup JSON">
+              <Download size={15} />
+              <span>Esporta Backup</span>
+            </button>
           </div>
 
-          <button className="btn btn-outline btn-sm" onClick={handleExportBackup} title="Scarica backup JSON">
-            <Download size={15} />
-            <span>Esporta Backup</span>
-          </button>
-        </div>
+          <form onSubmit={handleSaveSettings}>
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">
+                  <Users size={14} style={{ display: 'inline', marginRight: '4px' }} />
+                  Numero Ufficiale Ragazzi Partenti *
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="200"
+                  className="form-input"
+                  value={participantsCount}
+                  onChange={(e) => handleParticipantsChange(e.target.value)}
+                  required
+                />
+                <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                  Utilizzato per il calcolo: <strong>Utile Totale / {participantsCount} = Sconto a Persona</strong>
+                </span>
+              </div>
 
-        <form onSubmit={handleSaveSettings}>
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">
-                <Users size={14} style={{ display: 'inline', marginRight: '4px' }} />
-                Numero Ufficiale Ragazzi Partenti *
-              </label>
-              <input
-                type="number"
-                min="1"
-                max="200"
-                className="form-input"
-                value={participantsCount}
-                onChange={(e) => handleParticipantsChange(e.target.value)}
-                disabled={!isAdmin}
-                required
-              />
-              <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
-                Utilizzato per il calcolo: <strong>Utile Totale / {participantsCount} = Sconto a Persona</strong>
-              </span>
+              <div className="form-group">
+                <label className="form-label">
+                  <DollarSign size={14} style={{ display: 'inline', marginRight: '4px' }} />
+                  Costo Stimato a Partecipante (€)
+                </label>
+                <input
+                  type="number"
+                  step="10"
+                  className="form-input"
+                  value={estimatedCost}
+                  onChange={(e) => handleCostChange(e.target.value)}
+                  required
+                />
+                <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                  Volo aereo, alloggio, kit GMG e assicurazione
+                </span>
+              </div>
             </div>
 
             <div className="form-group">
-              <label className="form-label">
-                <DollarSign size={14} style={{ display: 'inline', marginRight: '4px' }} />
-                Costo Stimato a Partecipante (€)
-              </label>
-              <input
-                type="number"
-                step="10"
-                className="form-input"
-                value={estimatedCost}
-                onChange={(e) => handleCostChange(e.target.value)}
-                disabled={!isAdmin}
-                required
-              />
-              <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
-                Volo aereo, alloggio, kit GMG e assicurazione
-              </span>
-            </div>
-          </div>
-
-          <div className="form-group">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-              <label className="form-label" style={{ marginBottom: 0 }}>
-                <Target size={14} style={{ display: 'inline', marginRight: '4px' }} />
-                Obiettivo Totale Raccolta Fondi Oratorio (€)
-              </label>
-              {isAdmin && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <label className="form-label" style={{ marginBottom: 0 }}>
+                  <Target size={14} style={{ display: 'inline', marginRight: '4px' }} />
+                  Obiettivo Totale Raccolta Fondi Oratorio (€)
+                </label>
                 <button
                   type="button"
                   className="btn btn-ghost btn-sm"
@@ -391,55 +389,63 @@ export default function SettingsSection({ currentSettings, onSettingsUpdated }) 
                 >
                   Ricalcola: {participantsCount || 25} × {formatEuro(estimatedCost || 1800)}
                 </button>
-              )}
-            </div>
-            <input
-              type="number"
-              step="100"
-              className="form-input"
-              value={targetFund}
-              onChange={(e) => setTargetFund(e.target.value)}
-              disabled={!isAdmin}
-              required
-            />
-            <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
-              🎯 Di default calcolato come <strong>{participantsCount} partenti × {formatEuro(estimatedCost)} = {formatEuro((parseInt(participantsCount, 10) || 25) * (parseFloat(estimatedCost) || 1800))}</strong>
-            </span>
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">Nome Evento</label>
+              </div>
               <input
-                type="text"
+                type="number"
+                step="100"
                 className="form-input"
-                value={eventName}
-                onChange={(e) => setEventName(e.target.value)}
-                disabled={!isAdmin}
+                value={targetFund}
+                onChange={(e) => setTargetFund(e.target.value)}
+                required
               />
+              <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                🎯 Di default calcolato come <strong>{participantsCount} partenti × {formatEuro(estimatedCost)} = {formatEuro((parseInt(participantsCount, 10) || 25) * (parseFloat(estimatedCost) || 1800))}</strong>
+              </span>
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Oratorio / Comunità</label>
-              <input
-                type="text"
-                className="form-input"
-                value={oratoryName}
-                onChange={(e) => setOratoryName(e.target.value)}
-                disabled={!isAdmin}
-              />
-            </div>
-          </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">Nome Evento</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={eventName}
+                  onChange={(e) => setEventName(e.target.value)}
+                />
+              </div>
 
-          {isAdmin && (
+              <div className="form-group">
+                <label className="form-label">Oratorio / Comunità</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={oratoryName}
+                  onChange={(e) => setOratoryName(e.target.value)}
+                />
+              </div>
+            </div>
+
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
               <button type="submit" className="btn btn-primary" disabled={savingSettings}>
                 {savingSettings ? 'Salvataggio...' : 'Salva Parametri GMG'}
               </button>
             </div>
-          )}
-        </form>
-      </div>
+          </form>
+        </div>
+      )}
+
+      {/* Profilo per utenti semplici non moderatori */}
+      {!isModerator && (
+        <div className="stat-card" style={{ padding: '28px', textAlign: 'center' }}>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '8px' }}>
+            Profilo Pellegrino GMG
+          </h3>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '580px', margin: '0 auto' }}>
+            La gestione dei parametri ufficiali e l'approvazione delle iscrizioni sono riservate allo staff dell'Oratorio Don Bosco.
+            Puoi verificare lo sconto accumulato per la tua quota nella scheda <strong>Dashboard</strong> e i dettagli di tutte le attività in <strong>Raccolta Fondi</strong>!
+          </p>
+        </div>
+      )}
 
       {/* 2. SEZIONE GESTIONE UTENTI & APPROVAZIONI (Moderatori & Admin) */}
       {isModerator && (
