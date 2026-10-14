@@ -89,6 +89,9 @@ export default function AuthModal({ isOpen, onClose, initialToken = null }) {
     const result = await forgotPassword(email.trim());
     setLoading(false);
     if (result.success) {
+      if (result.backupCode) {
+        setResetCode(result.backupCode);
+      }
       setForgotSentSuccess(true);
       setMode('reset');
     }

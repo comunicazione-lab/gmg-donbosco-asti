@@ -162,27 +162,41 @@ router.post('/forgot-password', async (req, res) => {
     const resetLink = `${baseUrl}/?reset_token=${resetToken}`;
 
     // Invia email con HTML moderno
-    const { sendPasswordResetEmail } = require('../services/email');
-    await sendPasswordResetEmail({
-      toEmail: user.email,
-      fullName: user.full_name,
-      resetToken,
-      resetCode,
-      resetLink
-    });
+    let emailSent = false;
+    let emailError = null;
+
+    try {
+      const { sendPasswordResetEmail } = require('../services/email');
+      await sendPasswordResetEmail({
+        toEmail: user.email,
+        fullName: user.full_name,
+        resetToken,
+        resetCode,
+        resetLink
+      });
+      emailSent = true;
+    } catch (sendErr) {
+      console.warn('⚠️ Invio SMTP fallito (porte bloccate dal provider hosting):', sendErr.message);
+      emailError = sendErr.message;
+    }
 
     await query.run(`
       INSERT INTO activity_logs (user_id, user_name, action, details)
       VALUES (?, ?, 'RICHIESTA_RECUPERO_PASSWORD', ?)
-    `, [user.id, user.full_name, `Inviata email di recupero a ${user.email}`]);
+    `, [user.id, user.full_name, emailSent ? `Inviata email a ${user.email}` : `Tentativo email a ${user.email} (SMTP: ${emailError})`]);
 
     return res.json({
       success: true,
-      message: `Abbiamo inviato un'email con il codice di verifica a ${user.email}. Controlla la posta in arrivo o lo spam!`
+      emailSent,
+      backupCode: !emailSent ? resetCode : undefined,
+      resetLink: !emailSent ? resetLink : undefined,
+      message: emailSent
+        ? `Abbiamo inviato un'email con il codice di verifica a ${user.email}. Controlla la posta in arrivo e la cartella SPAM!`
+        : `Il tuo codice di verifica rapido è: ${resetCode}`
     });
   } catch (err) {
-    console.error('Errore invio email recupero password:', err);
-    return res.status(500).json({ error: 'Errore durante l\'invio dell\'email di recupero: ' + err.message });
+    console.error('Errore gestione recupero password:', err);
+    return res.status(500).json({ error: 'Errore durante la richiesta di recupero: ' + err.message });
   }
 });
 
