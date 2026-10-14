@@ -4,6 +4,8 @@ client/dist/
 .DS_Store
 *.log
 .env
+psw.env
+*.env
 data/*.db
 data/*.db-journal
 !data/.gitkeep
