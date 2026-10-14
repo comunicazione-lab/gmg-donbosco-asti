@@ -91,8 +91,6 @@ Apri il browser su [http://localhost:3001](http://localhost:3001).
 | `moderatore` | `DonBosco2027!` | Moderatore | Chiara Rossi (Animatore Staff) |
 | `giovane` | `DonBosco2027!` | Utente | Matteo Astesano (Pellegrino GMG) |
 
-Per una prova immediata, la finestra di login include anche i pulsanti di **Accesso Rapido con 1 click**!
-
 ---
 
 ## 🌐 Pubblicazione su Render e GitHub
