@@ -29,13 +29,19 @@ Ogni attività di raccolta fondi (es. *Cena Solidale Coreana & Piemontese*, *Ban
 
 ---
 
-### 🎯 3. Dashboard con Calcolo Sconto per Partecipante
-- **Sconto Attuale per Persona**: Evidenziato al centro della dashboard con grafica d'impatto (`Fondo Netto Raccolto / Numero Partenti`).
-- **Quota Residua Stimata**: Calcola quanto rimane da pagare per ciascun ragazzo rispetto al costo stimato del viaggio.
-- **Simulatore Interattivo Sconto**: Permette a chiunque di variare il numero dei ragazzi partenti o simulare future entrate per vedere in tempo reale come cambierà lo sconto individuale.
-- **Grafici Finanziari**:
-  - Ripartizione dell'utile e delle entrate per categoria (Cene, Tornei, Bancarelle, Lotterie, Servizi).
-  - Grafico circolare di efficienza: rapporto percentuale tra utile netto trattenuto e spese vive sostenute.
+### 🎯 3. Organizzazione in Sezioni
+- **Dashboard**:
+  - Banner di benvenuto salesiano *"In Cammino verso Seoul 2027"*.
+  - **Sconto Attuale per Persona**: Evidenziato al centro con grafica d'impatto (`Fondo Netto Raccolto / Numero Partenti`).
+  - **Quota Residua Stimata**: Calcola quanto rimane da pagare per ciascun ragazzo rispetto al costo stimato del viaggio.
+  - **Simulatore Interattivo Sconto**: Permette di variare il numero dei ragazzi partenti o simulare future entrate per vedere in tempo reale come cambierà lo sconto individuale.
+  - **Grafici Finanziari**: Ripartizione dell'utile e delle entrate per categoria ed efficienza entrate/spese.
+- **Raccolta Fondi**:
+  - In cima alla scheda sono posizionate le 4 card di riepilogo complessivo: **Fondo Netto Raccolto**, **Totale Entrate Lorde**, **Totale Spese Sostenute** e **Iniziative Totali**.
+  - Filtri per stato, categoria e ricerca rapida con lista analitica di tutte le attività.
+- **Impostazioni & Approvazioni**:
+  - **Parametri Ufficiali & Calcolo Quote GMG**: Visibili e modificabili **esclusivamente dall'Amministratore**. Utenti e moderatori non possono visualizzare né modificare questi parametri.
+  - **Gestione Utenti & Approvazione Iscrizioni**: Accessibile a moderatori e amministratori per convalidare le nuove richieste di iscrizione.
 
 ---
 
@@ -51,35 +57,19 @@ Ogni attività di raccolta fondi (es. *Cena Solidale Coreana & Piemontese*, *Ban
 - **Frontend**: React 18, Vite 4, Vanilla CSS Design System, Lucide Icons.
 - **Backend**: Node.js, Express, SQLite3 (database relazionale compatto e portabile).
 - **Autenticazione**: JSON Web Token (JWT), password hashing con Bcrypt.js.
-- **Deploy**: Predisposto per GitHub e pubblicazione istantanea su **Render** (`render.yaml`).
+- **Deploy**: Predisposto per GitHub e pubblicazione istantanea su **Render** (`Dockerfile`).
 
 ---
 
-## 🚀 Avvio Rapido Locale
-
-### Prerequisiti
-- Node.js (v16 o superiore)
-- npm
-
-### 1. Installazione Dipendenze
+## 🔄 Sincronizzazione Dati Live Render (Protezione Dati)
+Per garantire che nessun dato registrato o modificato online su Render vada perso durante un nuovo rilascio:
+1. Prima di ogni `git push`, lo script scarica automaticamente l'ultimo backup JSON da `https://gmg-db-asti.onrender.com/api/settings/export-data` e lo salva in `data/live_render_backup.json`.
+2. È attivo un **Git Pre-Push Hook** automatico in `.git/hooks/pre-push` che esegue la sincronizzazione preventiva.
+3. È disponibile il comando rapido unificato:
 ```bash
-# Dipendenze backend
-npm install
-
-# Dipendenze frontend
-npm --prefix client install
+npm run deploy
 ```
-
-### 2. Compilazione e Avvio
-```bash
-# Compila il frontend
-npm run build
-
-# Avvia l'applicazione fullstack (porta predefinita: 3001)
-npm start
-```
-
-Apri il browser su [http://localhost:3001](http://localhost:3001).
+che esegue in sequenza: sincronizzazione dati live Render -> build frontend -> commit con backup aggiornato -> push su GitHub.
 
 ---
 
@@ -90,9 +80,3 @@ Apri il browser su [http://localhost:3001](http://localhost:3001).
 | `admin` | `DonBosco2027!` | Amministratore | Don Marco (Parroco & Admin) |
 | `moderatore` | `DonBosco2027!` | Moderatore | Chiara Rossi (Animatore Staff) |
 | `giovane` | `DonBosco2027!` | Utente | Matteo Astesano (Pellegrino GMG) |
-
----
-
-## 🌐 Pubblicazione su Render e GitHub
-Per la procedura dettagliata di caricamento su GitHub e rilascio su Render, consulta la guida:
-👉 [**DEPLOY_RENDER.md**](file:///Users/Leonardo/Downloads/gmg-db/DEPLOY_RENDER.md)
