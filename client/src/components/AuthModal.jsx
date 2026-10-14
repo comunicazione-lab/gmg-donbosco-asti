@@ -201,15 +201,15 @@ export default function AuthModal({ isOpen, onClose, initialToken = null }) {
               <div className="form-group">
                 <label className="form-label">
                   <Mail size={14} style={{ display: 'inline', marginRight: '4px' }} />
-                  Indirizzo Email o Nome Utente
+                  Indirizzo Email
                 </label>
                 <input
-                  type="text"
+                  type="email"
                   className="form-input"
-                  placeholder="es. imparato.donbosco@gmail.com oppure leo_impa02"
+                  placeholder="es. nomeutente@email.it"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  autoComplete="username"
+                  autoComplete="email"
                   required
                 />
               </div>
@@ -281,7 +281,7 @@ export default function AuthModal({ isOpen, onClose, initialToken = null }) {
                 <input
                   type="email"
                   className="form-input"
-                  placeholder="es. marco@donboscoasti.it"
+                  placeholder="es. nomeutente@email.it"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="email"
