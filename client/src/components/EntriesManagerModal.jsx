@@ -240,19 +240,7 @@ export default function EntriesManagerModal({ initiativeId, onClose, onRefreshDa
         {/* Modal Body */}
         <div className="modal-body">
           {/* Summary Box Bilancio Iniziativa */}
-          <div
-            style={{
-              background: 'rgba(15, 23, 42, 0.8)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              borderRadius: 'var(--radius-md)',
-              padding: '18px 20px',
-              marginBottom: '20px',
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-              gap: '14px',
-              alignItems: 'center'
-            }}
-          >
+          <div className="modal-finance-summary">
             <div>
               <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
                 Totale Entrate

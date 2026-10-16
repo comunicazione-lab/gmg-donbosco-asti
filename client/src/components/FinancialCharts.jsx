@@ -14,7 +14,7 @@ export default function FinancialCharts({ categoryBreakdown, metrics }) {
   const profitRatio = Math.max(0, 100 - expenseRatio);
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '22px', marginBottom: '32px' }}>
+    <div className="charts-grid">
       {/* Grafico Ripartizione per Categorie */}
       <div className="stat-card">
         <div className="stat-header">

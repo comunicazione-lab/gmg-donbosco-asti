@@ -461,7 +461,7 @@ export default function SettingsSection({ currentSettings, onSettingsUpdated }) 
               </p>
             </div>
 
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div className="user-tab-buttons-row">
               <button
                 className={`btn btn-sm ${userTab === 'pending' ? 'btn-primary' : 'btn-outline'}`}
                 onClick={() => setUserTab('pending')}

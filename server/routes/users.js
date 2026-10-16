@@ -36,6 +36,8 @@ router.get('/', requireAuth, requireModerator, async (req, res) => {
     console.error('Errore recupero utenti:', err);
     res.status(500).json({ error: 'Errore nel recupero della lista utenti.' });
   }
+});
+
 // Lista utenti registrati approvati per selezione nelle spese e bilancio (Accessibile a tutti gli utenti autenticati)
 router.get('/registered-list', requireAuth, async (req, res) => {
   try {

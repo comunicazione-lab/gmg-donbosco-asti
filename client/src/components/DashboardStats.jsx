@@ -51,16 +51,7 @@ export function HeroDiscountCard({ metrics, onOpenSettings }) {
           🎉 Risparmio accumulato per ciascuno degli <strong>{participants_count} ragazzi partenti</strong>
         </div>
 
-        <div
-          style={{
-            marginTop: '14px',
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: '16px',
-            fontSize: '0.88rem',
-            color: 'var(--text-secondary)'
-          }}
-        >
+        <div className="hero-metrics-pill-grid">
           <div>
             <span>Quota stimata viaggio: </span>
             <strong style={{ color: 'var(--text-main)' }}>{formatEuro(estimated_cost_per_person)}</strong>
