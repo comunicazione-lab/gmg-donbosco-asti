@@ -36,6 +36,17 @@ router.get('/', requireAuth, requireModerator, async (req, res) => {
     console.error('Errore recupero utenti:', err);
     res.status(500).json({ error: 'Errore nel recupero della lista utenti.' });
   }
+// Lista utenti registrati approvati per selezione nelle spese e bilancio (Accessibile a tutti gli utenti autenticati)
+router.get('/registered-list', requireAuth, async (req, res) => {
+  try {
+    const users = await query.all(
+      "SELECT id, full_name, email, role FROM users WHERE status = 'approved' ORDER BY full_name ASC"
+    );
+    res.json({ users });
+  } catch (err) {
+    console.error('Errore recupero lista utenti registrati:', err);
+    res.status(500).json({ error: 'Errore nel recupero della lista utenti.' });
+  }
 });
 
 // Conteggio utenti in attesa di approvazione (badge notifiche per moderatori e admin)

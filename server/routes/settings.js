@@ -16,12 +16,16 @@ router.get('/dashboard', requireAuth, async (req, res) => {
       SELECT
         COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END), 0) as total_income,
         COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0) as total_expense,
+        COALESCE(SUM(CASE WHEN type = 'expense' AND sustained_by_id IS NOT NULL AND reimbursement_status = 'da_rimborsare' THEN amount ELSE 0 END), 0) as total_to_reimburse,
+        COALESCE(SUM(CASE WHEN type = 'expense' AND sustained_by_id IS NOT NULL AND reimbursement_status = 'rimborsato' THEN amount ELSE 0 END), 0) as total_reimbursed,
         COUNT(id) as total_entries_count
       FROM initiative_entries
     `);
 
     const totalIncome = Math.round(Number(totals.total_income) * 100) / 100;
     const totalExpense = Math.round(Number(totals.total_expense) * 100) / 100;
+    const totalToReimburse = Math.round(Number(totals.total_to_reimburse || 0) * 100) / 100;
+    const totalReimbursed = Math.round(Number(totals.total_reimbursed || 0) * 100) / 100;
     const netProfit = Math.round((totalIncome - totalExpense) * 100) / 100;
 
     // Calcolo dello sconto / quota per partecipante
@@ -53,15 +57,18 @@ router.get('/dashboard', requireAuth, async (req, res) => {
       ORDER BY income DESC
     `);
 
-    // Ultime 5 voci registrate
+    // Ultime 8 voci registrate
     const recentEntries = await query.all(`
       SELECT
         e.id, e.title, e.amount, e.type, e.category, e.entry_date,
+        e.sustained_by_id, e.reimbursement_status,
+        su.full_name as sustained_by_name,
         i.title as initiative_title, i.id as initiative_id,
         u.full_name as author_name
       FROM initiative_entries e
       JOIN initiatives i ON e.initiative_id = i.id
       LEFT JOIN users u ON e.created_by = u.id
+      LEFT JOIN users su ON e.sustained_by_id = su.id
       ORDER BY e.entry_date DESC, e.id DESC
       LIMIT 8
     `);
@@ -77,6 +84,8 @@ router.get('/dashboard', requireAuth, async (req, res) => {
         total_income: totalIncome,
         total_expense: totalExpense,
         net_profit: netProfit,
+        total_to_reimburse: totalToReimburse,
+        total_reimbursed: totalReimbursed,
         participants_count: participantsCount,
         estimated_cost_per_person: estimatedCost,
         target_fundraising_total: targetTotal,

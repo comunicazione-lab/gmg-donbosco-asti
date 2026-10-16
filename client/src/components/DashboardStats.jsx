@@ -114,7 +114,8 @@ export function FundraisingTotalsCards({ metrics }) {
     target_percent = 0,
     initiatives_count = 0,
     completed_count = 0,
-    total_entries_count = 0
+    total_entries_count = 0,
+    total_to_reimburse = 0
   } = metrics;
 
   return (
@@ -196,7 +197,13 @@ export function FundraisingTotalsCards({ metrics }) {
         </div>
 
         <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '10px' }}>
-          🏷️ Tracciamento analitico delle uscite
+          {total_to_reimburse > 0 ? (
+            <span style={{ color: '#f59e0b', fontWeight: 600 }}>
+              ⏳ Da rimborsare a volontari: <strong>{formatEuro(total_to_reimburse)}</strong>
+            </span>
+          ) : (
+            <span>🏷️ Tracciamento analitico delle uscite</span>
+          )}
         </div>
       </div>
 

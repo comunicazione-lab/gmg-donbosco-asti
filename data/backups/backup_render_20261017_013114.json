@@ -1,0 +1,140 @@
+{
+  "export_date": "2026-10-16T23:31:09.762Z",
+  "oratory": "Oratorio Salesiano Don Bosco - Asti",
+  "event": "GMG Seoul 2027 - Corea del Sud",
+  "settings": {
+    "id": 1,
+    "participants_count": 7,
+    "estimated_cost_per_person": 2200,
+    "target_fundraising_total": 15400,
+    "event_name": "GMG Seoul 2027 - Corea del Sud",
+    "oratory_name": "Oratorio Salesiano Don Bosco - Asti",
+    "currency": "€",
+    "updated_at": "2026-10-14 18:34:50"
+  },
+  "initiatives": [
+    {
+      "id": 6,
+      "title": "Bancarella Calcio",
+      "description": "",
+      "category": "Bancarelle & Mercatini",
+      "status": "in_corso",
+      "event_date": "2026-10-17",
+      "location": "Oratorio Don Bosco Asti",
+      "created_by": null,
+      "created_at": "2026-10-14 14:11:19",
+      "updated_at": "2026-10-14 14:11:19"
+    },
+    {
+      "id": 7,
+      "title": "Serata Materassi",
+      "description": "",
+      "category": "Eventi & Tornei",
+      "status": "pianificata",
+      "event_date": "2027-01-15",
+      "location": "Oratorio Don Bosco Asti",
+      "created_by": 5,
+      "created_at": "2026-10-14 16:22:20",
+      "updated_at": "2026-10-14 18:35:45"
+    },
+    {
+      "id": 8,
+      "title": "Cena con delitto",
+      "description": "",
+      "category": "Cene & Ristoro",
+      "status": "pianificata",
+      "event_date": "2027-03-23",
+      "location": "Oratorio Don Bosco Asti",
+      "created_by": 5,
+      "created_at": "2026-10-14 16:23:20",
+      "updated_at": "2026-10-14 16:23:20"
+    },
+    {
+      "id": 10,
+      "title": "Vendita torte",
+      "description": "",
+      "category": "Bancarelle & Mercatini",
+      "status": "pianificata",
+      "event_date": "2026-11-29",
+      "location": "Oratorio Don Bosco Asti",
+      "created_by": 7,
+      "created_at": "2026-10-14 18:37:56",
+      "updated_at": "2026-10-14 18:37:56"
+    },
+    {
+      "id": 11,
+      "title": "Banchetto di Natale",
+      "description": "",
+      "category": "Cene & Ristoro",
+      "status": "pianificata",
+      "event_date": "2026-12-20",
+      "location": "Oratorio Don Bosco Asti",
+      "created_by": 7,
+      "created_at": "2026-10-14 18:39:51",
+      "updated_at": "2026-10-14 18:39:51"
+    }
+  ],
+  "entries": [],
+  "users": [
+    {
+      "id": 5,
+      "username": "leo_impa02",
+      "email": "imparato.donbosco@gmail.com",
+      "password_hash": "$2b$10$2XmtvmkwOcyhfgYnijGlquzSWnMtQkzGUD1DEEouq.xkrpZ9/KZD6",
+      "full_name": "Leonardo Imparato",
+      "role": "admin",
+      "status": "approved",
+      "created_at": "2026-10-14 14:10:25"
+    },
+    {
+      "id": 7,
+      "username": "enrico.carretto",
+      "email": "enrico.carretto@dbasti.com",
+      "password_hash": "$2b$10$U6ktevAe0er8.hGO3Ixee.cdmBSHsP1yvCjSMwp6tILz3EPOhs6Yq",
+      "full_name": "Enrico Carretto",
+      "role": "moderator",
+      "status": "approved",
+      "created_at": "2026-10-14 17:05:14"
+    },
+    {
+      "id": 8,
+      "username": "qua.marta3",
+      "email": "qua.marta3@gmail.com",
+      "password_hash": "$2b$10$gb/wchXJDjw5aFcWXqpiR.OWyOABYzPepKqyGzGLoNOa4XUuZB2KO",
+      "full_name": "marta quartararo",
+      "role": "user",
+      "status": "approved",
+      "created_at": "2026-10-14 18:34:01"
+    },
+    {
+      "id": 9,
+      "username": "emmanicolepecoraro",
+      "email": "emmanicolepecoraro@icloud.com",
+      "password_hash": "$2b$10$fjF2WueTrQGxdkLKS0ussepHN0qg2oBClOkZdCgETgx8V/fS5aU4e",
+      "full_name": "Emma Pecoraro",
+      "role": "moderator",
+      "status": "approved",
+      "created_at": "2026-10-14 18:34:18"
+    },
+    {
+      "id": 10,
+      "username": "pezzuto.irene",
+      "email": "pezzuto.irene@icloud.com",
+      "password_hash": "$2b$10$YQ.3fz.1WW18BxrvNWb3Bu28bYdYwFO3.zN5CdL6x8LnAJc0T003a",
+      "full_name": "Irene Pezzuto",
+      "role": "user",
+      "status": "approved",
+      "created_at": "2026-10-14 18:36:21"
+    },
+    {
+      "id": 11,
+      "username": "alessandromarello06",
+      "email": "alessandromarello06@gmail.com",
+      "password_hash": "$2b$10$6dJNCFpJx/u/DpRv9vVBLecgl0vZ6iksp1ZVW5sxyeqh6rh/zKHV2",
+      "full_name": "Alessandro Marello",
+      "role": "user",
+      "status": "approved",
+      "created_at": "2026-10-16 15:02:00"
+    }
+  ]
+}

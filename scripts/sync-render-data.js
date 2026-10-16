@@ -69,10 +69,9 @@ async function sync() {
 
   try {
     const candidateCredentials = [
-      { email: 'admin@donboscoasti.it', pass: '123456' },
+      { email: 'imparato.donbosco@gmail.com', pass: 'DonBosco2027!' },
       { email: 'admin@donboscoasti.it', pass: 'DonBosco2027!' },
-      { email: 'admin', pass: '123456' },
-      { email: 'admin', pass: 'DonBosco2027!' },
+      { email: 'admin@donboscoasti.it', pass: '123456' },
       { email: process.env.ADMIN_USER, pass: process.env.ADMIN_PASS }
     ].filter(c => c.email && c.pass);
 

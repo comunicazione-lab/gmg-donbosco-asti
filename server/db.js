@@ -115,13 +115,30 @@ async function initDb() {
       amount REAL NOT NULL CHECK(amount >= 0),
       entry_date TEXT,
       notes TEXT,
+      sustained_by_id INTEGER,
+      reimbursement_status TEXT DEFAULT 'da_rimborsare' CHECK(reimbursement_status IN ('da_rimborsare', 'rimborsato', 'donato')),
       created_by INTEGER,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (initiative_id) REFERENCES initiatives(id) ON DELETE CASCADE,
+      FOREIGN KEY (sustained_by_id) REFERENCES users(id) ON DELETE SET NULL,
       FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
     );
   `);
+
+  // Migrazione automatica per database esistenti (aggiunge colonne sustained_by_id e reimbursement_status se assenti)
+  try {
+    const tableInfo = await query.all("PRAGMA table_info(initiative_entries)");
+    const colNames = tableInfo.map(c => c.name);
+    if (!colNames.includes('sustained_by_id')) {
+      await query.run("ALTER TABLE initiative_entries ADD COLUMN sustained_by_id INTEGER REFERENCES users(id) ON DELETE SET NULL");
+    }
+    if (!colNames.includes('reimbursement_status')) {
+      await query.run("ALTER TABLE initiative_entries ADD COLUMN reimbursement_status TEXT DEFAULT 'da_rimborsare'");
+    }
+  } catch (mErr) {
+    console.warn("Nota migrazione initiative_entries:", mErr.message);
+  }
 
   // 5. Tabella Log Attività
   await query.exec(`
@@ -424,8 +441,8 @@ async function initDbFromBackup(backupData) {
   if (Array.isArray(backupData.entries) && backupData.entries.length > 0) {
     for (const entry of backupData.entries) {
       await query.run(`
-        INSERT INTO initiative_entries (id, initiative_id, type, title, category, amount, entry_date, notes, created_by, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO initiative_entries (id, initiative_id, type, title, category, amount, entry_date, notes, sustained_by_id, reimbursement_status, created_by, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
         entry.id,
         entry.initiative_id,
@@ -435,6 +452,8 @@ async function initDbFromBackup(backupData) {
         entry.amount,
         entry.entry_date,
         entry.notes || '',
+        entry.sustained_by_id || null,
+        entry.reimbursement_status || 'da_rimborsare',
         entry.created_by,
         entry.created_at || new Date().toISOString(),
         entry.updated_at || new Date().toISOString()

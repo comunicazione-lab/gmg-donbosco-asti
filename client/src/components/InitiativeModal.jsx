@@ -16,12 +16,26 @@ export default function InitiativeModal({ isOpen, onClose, initiativeToEdit, onS
   const [hasInitialExpense, setHasInitialExpense] = useState(false);
   const [initialExpenseTitle, setInitialExpenseTitle] = useState('Spesa iniziale preparativi');
   const [initialExpenseAmount, setInitialExpenseAmount] = useState('');
+  const [initialExpenseSustainedBy, setInitialExpenseSustainedBy] = useState('');
+  const [initialExpenseReimbursementStatus, setInitialExpenseReimbursementStatus] = useState('da_rimborsare');
+  const [usersList, setUsersList] = useState([]);
 
   const [hasInitialIncome, setHasInitialIncome] = useState(false);
   const [initialIncomeTitle, setInitialIncomeTitle] = useState('Incasso iniziale / Prevendite');
   const [initialIncomeAmount, setInitialIncomeAmount] = useState('');
 
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && usersList.length === 0) {
+      fetch('/api/users/registered-list', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+        .then((r) => r.json())
+        .then((d) => setUsersList(d.users || []))
+        .catch((err) => console.error(err));
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (initiativeToEdit) {
@@ -43,6 +57,8 @@ export default function InitiativeModal({ isOpen, onClose, initiativeToEdit, onS
       setHasInitialExpense(false);
       setHasInitialIncome(false);
       setInitialExpenseAmount('');
+      setInitialExpenseSustainedBy('');
+      setInitialExpenseReimbursementStatus('da_rimborsare');
       setInitialIncomeAmount('');
     }
   }, [initiativeToEdit, isOpen]);
@@ -72,7 +88,9 @@ export default function InitiativeModal({ isOpen, onClose, initiativeToEdit, onS
             category: 'Materiali & Preparativi',
             amount: parseFloat(initialExpenseAmount),
             entry_date: eventDate,
-            notes: 'Spesa iniziale inserita all\'apertura dell\'attività'
+            notes: 'Spesa iniziale inserita all\'apertura dell\'attività',
+            sustained_by_id: initialExpenseSustainedBy ? parseInt(initialExpenseSustainedBy, 10) : null,
+            reimbursement_status: initialExpenseSustainedBy ? initialExpenseReimbursementStatus : null
           });
         }
         if (hasInitialIncome && Number(initialIncomeAmount) > 0) {
@@ -241,22 +259,50 @@ export default function InitiativeModal({ isOpen, onClose, initiativeToEdit, onS
                   <span>Inserisci subito una spesa iniziale (costo previsto)</span>
                 </label>
                 {hasInitialExpense && (
-                  <div className="form-row" style={{ marginTop: '8px' }}>
-                    <input
-                      type="text"
-                      className="form-input"
-                      placeholder="Descrizione spesa (es. Spesa ingredienti)"
-                      value={initialExpenseTitle}
-                      onChange={(e) => setInitialExpenseTitle(e.target.value)}
-                    />
-                    <input
-                      type="number"
-                      step="0.01"
-                      className="form-input"
-                      placeholder="Importo spesa (€)"
-                      value={initialExpenseAmount}
-                      onChange={(e) => setInitialExpenseAmount(e.target.value)}
-                    />
+                  <div style={{ marginTop: '8px', padding: '10px', background: 'rgba(245, 158, 11, 0.06)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+                    <div className="form-row">
+                      <input
+                        type="text"
+                        className="form-input"
+                        placeholder="Descrizione spesa (es. Spesa ingredienti)"
+                        value={initialExpenseTitle}
+                        onChange={(e) => setInitialExpenseTitle(e.target.value)}
+                      />
+                      <input
+                        type="number"
+                        step="0.01"
+                        className="form-input"
+                        placeholder="Importo spesa (€)"
+                        value={initialExpenseAmount}
+                        onChange={(e) => setInitialExpenseAmount(e.target.value)}
+                      />
+                    </div>
+                    <div className="form-row" style={{ marginTop: '8px', marginBottom: 0 }}>
+                      <select
+                        className="form-select"
+                        value={initialExpenseSustainedBy}
+                        onChange={(e) => setInitialExpenseSustainedBy(e.target.value)}
+                        title="Seleziona chi ha anticipato questa spesa"
+                      >
+                        <option value="">🏛️ Spesa sostenuta da: Cassa Oratorio</option>
+                        {usersList.map((u) => (
+                          <option key={u.id} value={u.id}>
+                            👤 Spesa anticipata da: {u.full_name}
+                          </option>
+                        ))}
+                      </select>
+                      {initialExpenseSustainedBy && (
+                        <select
+                          className="form-select"
+                          value={initialExpenseReimbursementStatus}
+                          onChange={(e) => setInitialExpenseReimbursementStatus(e.target.value)}
+                        >
+                          <option value="da_rimborsare">🟠 Da rimborsare</option>
+                          <option value="rimborsato">🟢 Già rimborsato</option>
+                          <option value="donato">🔵 Donato</option>
+                        </select>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>

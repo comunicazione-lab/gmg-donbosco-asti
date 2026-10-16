@@ -17,6 +17,8 @@ export default function InitiativeCard({ initiative, onOpenEntries, onEdit, onDe
     total_income = 0,
     total_expense = 0,
     net_profit = 0,
+    total_to_reimburse = 0,
+    total_reimbursed = 0,
     entries_count = 0
   } = initiative;
 
@@ -77,6 +79,17 @@ export default function InitiativeCard({ initiative, onOpenEntries, onEdit, onDe
               {net_profit >= 0 ? '+' : ''}{formatEuro(net_profit)}
             </span>
           </div>
+
+          {total_to_reimburse > 0 && (
+            <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px dashed rgba(245, 158, 11, 0.25)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.76rem', color: '#f59e0b', fontWeight: 600 }}>
+                ⏳ Da rimborsare:
+              </span>
+              <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#f59e0b' }}>
+                {formatEuro(total_to_reimburse)}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 

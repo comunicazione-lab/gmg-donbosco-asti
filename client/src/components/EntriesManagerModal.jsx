@@ -9,7 +9,10 @@ import {
   Calendar,
   Tag,
   CheckCircle,
-  FileText
+  FileText,
+  User,
+  Clock,
+  Check
 } from 'lucide-react';
 import { formatEuro } from './DashboardStats';
 import { useAuth } from '../context/AuthContext';
@@ -18,7 +21,8 @@ export default function EntriesManagerModal({ initiativeId, onClose, onRefreshDa
   const { token, isModerator, showToast } = useAuth();
   const [initiative, setInitiative] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('all'); // 'all', 'income', 'expense'
+  const [activeTab, setActiveTab] = useState('all'); // 'all', 'income', 'expense', 'to_reimburse'
+  const [usersList, setUsersList] = useState([]);
 
   // Form stato per nuova voce
   const [showAddForm, setShowAddForm] = useState(false);
@@ -28,6 +32,8 @@ export default function EntriesManagerModal({ initiativeId, onClose, onRefreshDa
   const [newAmount, setNewAmount] = useState('');
   const [newDate, setNewDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [newNotes, setNewNotes] = useState('');
+  const [newSustainedById, setNewSustainedById] = useState('');
+  const [newReimbursementStatus, setNewReimbursementStatus] = useState('da_rimborsare');
   const [submitting, setSubmitting] = useState(false);
 
   // Carica i dati dell'iniziativa e le sue voci
@@ -51,9 +57,25 @@ export default function EntriesManagerModal({ initiativeId, onClose, onRefreshDa
     }
   };
 
+  // Carica lista utenti registrati per assegnare chi ha sostenuto la spesa
+  const loadUsers = async () => {
+    try {
+      const res = await fetch('/api/users/registered-list', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUsersList(data.users || []);
+      }
+    } catch (err) {
+      console.error('Errore caricamento lista utenti registrati:', err);
+    }
+  };
+
   useEffect(() => {
     if (initiativeId) {
       loadInitiative();
+      loadUsers();
     }
   }, [initiativeId]);
 
@@ -72,20 +94,27 @@ export default function EntriesManagerModal({ initiativeId, onClose, onRefreshDa
 
     setSubmitting(true);
     try {
+      const payload = {
+        type: newType,
+        title: newTitle.trim(),
+        category: newCategory,
+        amount: amountVal,
+        entry_date: newDate,
+        notes: newNotes.trim()
+      };
+
+      if (newType === 'expense' && newSustainedById) {
+        payload.sustained_by_id = parseInt(newSustainedById, 10);
+        payload.reimbursement_status = newReimbursementStatus;
+      }
+
       const res = await fetch(`/api/initiatives/${initiativeId}/entries`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({
-          type: newType,
-          title: newTitle.trim(),
-          category: newCategory,
-          amount: amountVal,
-          entry_date: newDate,
-          notes: newNotes.trim()
-        })
+        body: JSON.stringify(payload)
       });
 
       const data = await res.json();
@@ -96,6 +125,8 @@ export default function EntriesManagerModal({ initiativeId, onClose, onRefreshDa
         setNewTitle('');
         setNewAmount('');
         setNewNotes('');
+        setNewSustainedById('');
+        setNewReimbursementStatus('da_rimborsare');
         setShowAddForm(false);
         if (onRefreshData) onRefreshData();
       } else {
@@ -105,6 +136,31 @@ export default function EntriesManagerModal({ initiativeId, onClose, onRefreshDa
       showToast('Errore di connessione', 'error');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  // Cambio rapido stato rimborso per una spesa sostenuta da un utente
+  const handleUpdateReimbursement = async (entryId, status) => {
+    try {
+      const res = await fetch(`/api/initiatives/${initiativeId}/entries/${entryId}/reimbursement`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ reimbursement_status: status })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        showToast(data.message, 'success');
+        setInitiative(data.initiative);
+        if (onRefreshData) onRefreshData();
+      } else {
+        showToast(data.error || 'Errore aggiornamento stato rimborso', 'error');
+      }
+    } catch (err) {
+      showToast('Errore durante l\'aggiornamento del rimborso', 'error');
     }
   };
 
@@ -142,15 +198,24 @@ export default function EntriesManagerModal({ initiativeId, onClose, onRefreshDa
   }
 
   const entries = initiative?.entries || [];
+  const toReimburseEntries = entries.filter(
+    (e) => e.type === 'expense' && e.sustained_by_id && (e.reimbursement_status === 'da_rimborsare' || !e.reimbursement_status)
+  );
+
   const filteredEntries = entries.filter((entry) => {
     if (activeTab === 'income') return entry.type === 'income';
     if (activeTab === 'expense') return entry.type === 'expense';
+    if (activeTab === 'to_reimburse') {
+      return entry.type === 'expense' && entry.sustained_by_id && (entry.reimbursement_status === 'da_rimborsare' || !entry.reimbursement_status);
+    }
     return true;
   });
 
   const totalIncome = initiative?.total_income || 0;
   const totalExpense = initiative?.total_expense || 0;
   const netProfit = initiative?.net_profit || 0;
+  const totalToReimburse = initiative?.total_to_reimburse || 0;
+  const totalReimbursed = initiative?.total_reimbursed || 0;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -183,14 +248,14 @@ export default function EntriesManagerModal({ initiativeId, onClose, onRefreshDa
               padding: '18px 20px',
               marginBottom: '20px',
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
               gap: '14px',
               alignItems: 'center'
             }}
           >
             <div>
               <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-                Totale Guadagni (Entrate)
+                Totale Entrate
               </span>
               <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#34d399' }}>
                 +{formatEuro(totalIncome)}
@@ -199,7 +264,7 @@ export default function EntriesManagerModal({ initiativeId, onClose, onRefreshDa
 
             <div>
               <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-                Totale Costi (Spese)
+                Totale Spese
               </span>
               <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#fb7185' }}>
                 -{formatEuro(totalExpense)}
@@ -208,7 +273,7 @@ export default function EntriesManagerModal({ initiativeId, onClose, onRefreshDa
 
             <div style={{ borderLeft: '1px solid rgba(255, 255, 255, 0.1)', paddingLeft: '14px' }}>
               <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-                Utile Netto Calcolato
+                Utile Netto
               </span>
               <div
                 style={{
@@ -220,17 +285,39 @@ export default function EntriesManagerModal({ initiativeId, onClose, onRefreshDa
                 {netProfit >= 0 ? '+' : ''}{formatEuro(netProfit)}
               </div>
             </div>
+
+            {totalToReimburse > 0 && (
+              <div style={{ borderLeft: '1px solid rgba(245, 158, 11, 0.25)', paddingLeft: '14px' }}>
+                <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#f59e0b', fontWeight: 700 }}>
+                  ⏳ Da Rimborsare
+                </span>
+                <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#f59e0b' }}>
+                  {formatEuro(totalToReimburse)}
+                </div>
+              </div>
+            )}
+
+            {totalReimbursed > 0 && (
+              <div style={{ borderLeft: '1px solid rgba(16, 185, 129, 0.25)', paddingLeft: '14px' }}>
+                <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#34d399', fontWeight: 700 }}>
+                  ✅ Già Rimborsato
+                </span>
+                <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#34d399' }}>
+                  {formatEuro(totalReimbursed)}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Controls Bar */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
             {/* Tabs Filter */}
-            <div style={{ display: 'flex', gap: '6px' }}>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
               <button
                 className={`btn btn-sm ${activeTab === 'all' ? 'btn-primary' : 'btn-ghost'}`}
                 onClick={() => setActiveTab('all')}
               >
-                Tutte le voci ({entries.length})
+                Tutte ({entries.length})
               </button>
               <button
                 className={`btn btn-sm ${activeTab === 'income' ? 'btn-success' : 'btn-ghost'}`}
@@ -246,6 +333,20 @@ export default function EntriesManagerModal({ initiativeId, onClose, onRefreshDa
                 <TrendingDown size={14} />
                 <span>Spese ({entries.filter((e) => e.type === 'expense').length})</span>
               </button>
+              {toReimburseEntries.length > 0 && (
+                <button
+                  className={`btn btn-sm ${activeTab === 'to_reimburse' ? 'btn-primary' : 'btn-ghost'}`}
+                  style={{
+                    color: activeTab === 'to_reimburse' ? '#fff' : '#f59e0b',
+                    borderColor: 'rgba(245, 158, 11, 0.35)',
+                    background: activeTab === 'to_reimburse' ? '#d97706' : 'rgba(245, 158, 11, 0.08)'
+                  }}
+                  onClick={() => setActiveTab('to_reimburse')}
+                >
+                  <Clock size={14} />
+                  <span>Da Rimborsare ({toReimburseEntries.length})</span>
+                </button>
+              )}
             </div>
 
             {/* Pulsante Aggiungi Voce (Moderatori & Admin) */}
@@ -331,6 +432,64 @@ export default function EntriesManagerModal({ initiativeId, onClose, onRefreshDa
                   />
                 </div>
               </div>
+
+              {/* Chi ha sostenuto la spesa (se spesa) */}
+              {newType === 'expense' && (
+                <div
+                  style={{
+                    background: 'rgba(245, 158, 11, 0.08)',
+                    border: '1px solid rgba(245, 158, 11, 0.25)',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '14px',
+                    marginBottom: '16px'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                    <User size={16} style={{ color: '#f59e0b' }} />
+                    <span style={{ fontSize: '0.86rem', fontWeight: 700, color: '#f59e0b' }}>
+                      Chi ha sostenuto / anticipato questa spesa?
+                    </span>
+                  </div>
+
+                  <div className="form-row" style={{ marginBottom: 0 }}>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label">Seleziona utente registrato o cassa</label>
+                      <select
+                        className="form-select"
+                        value={newSustainedById}
+                        onChange={(e) => setNewSustainedById(e.target.value)}
+                      >
+                        <option value="">🏛️ Cassa Oratorio Don Bosco (Nessun rimborso personale)</option>
+                        {usersList.map((u) => (
+                          <option key={u.id} value={u.id}>
+                            👤 {u.full_name} ({u.email})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {newSustainedById && (
+                      <div className="form-group" style={{ marginBottom: 0 }}>
+                        <label className="form-label">Stato Rimborso Spesa</label>
+                        <select
+                          className="form-select"
+                          value={newReimbursementStatus}
+                          onChange={(e) => setNewReimbursementStatus(e.target.value)}
+                        >
+                          <option value="da_rimborsare">🟠 Da rimborsare (in attesa di restituzione)</option>
+                          <option value="rimborsato">🟢 Già rimborsato dall'oratorio</option>
+                          <option value="donato">🔵 Donato (anticipato e offerto volontariamente)</option>
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                  {newSustainedById && (
+                    <p style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', marginTop: '8px', marginBottom: 0 }}>
+                      ℹ️ La voce verrà associata all'utente per facilitare la rendicontazione e la restituzione della somma anticipata.
+                    </p>
+                  )}
+                </div>
+              )}
 
               <div className="form-row">
                 <div className="form-group">
@@ -425,6 +584,7 @@ export default function EntriesManagerModal({ initiativeId, onClose, onRefreshDa
                   <tr>
                     <th>Tipo</th>
                     <th>Descrizione & Categoria</th>
+                    <th>Chi ha sostenuto / Rimborso</th>
                     <th>Data</th>
                     <th>Note / Dettaglio</th>
                     <th style={{ textAlign: 'right' }}>Importo</th>
@@ -479,6 +639,91 @@ export default function EntriesManagerModal({ initiativeId, onClose, onRefreshDa
                         <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
                           {entry.category}
                         </span>
+                      </td>
+
+                      {/* Chi ha sostenuto / Rimborso */}
+                      <td>
+                        {entry.type === 'expense' ? (
+                          entry.sustained_by_id && entry.sustained_by_name ? (
+                            <div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.82rem', fontWeight: 600 }}>
+                                <User size={13} style={{ color: '#38bdf8' }} />
+                                <span>{entry.sustained_by_name}</span>
+                              </div>
+                              <div style={{ marginTop: '4px' }}>
+                                {isModerator ? (
+                                  <select
+                                    className="form-select"
+                                    style={{
+                                      padding: '2px 8px',
+                                      fontSize: '0.72rem',
+                                      height: 'auto',
+                                      width: 'auto',
+                                      display: 'inline-block',
+                                      borderRadius: '4px',
+                                      fontWeight: 600,
+                                      background:
+                                        entry.reimbursement_status === 'rimborsato'
+                                          ? 'rgba(16, 185, 129, 0.2)'
+                                          : entry.reimbursement_status === 'donato'
+                                          ? 'rgba(59, 130, 246, 0.2)'
+                                          : 'rgba(245, 158, 11, 0.2)',
+                                      color:
+                                        entry.reimbursement_status === 'rimborsato'
+                                          ? '#34d399'
+                                          : entry.reimbursement_status === 'donato'
+                                          ? '#60a5fa'
+                                          : '#fbbf24',
+                                      borderColor: 'rgba(255, 255, 255, 0.1)',
+                                      cursor: 'pointer'
+                                    }}
+                                    value={entry.reimbursement_status || 'da_rimborsare'}
+                                    onChange={(e) => handleUpdateReimbursement(entry.id, e.target.value)}
+                                    title="Modifica stato rimborso"
+                                  >
+                                    <option value="da_rimborsare">🟠 Da rimborsare</option>
+                                    <option value="rimborsato">🟢 Rimborsato</option>
+                                    <option value="donato">🔵 Donato</option>
+                                  </select>
+                                ) : (
+                                  <span
+                                    style={{
+                                      display: 'inline-block',
+                                      fontSize: '0.72rem',
+                                      padding: '2px 8px',
+                                      borderRadius: '999px',
+                                      fontWeight: 600,
+                                      background:
+                                        entry.reimbursement_status === 'rimborsato'
+                                          ? 'rgba(16, 185, 129, 0.15)'
+                                          : entry.reimbursement_status === 'donato'
+                                          ? 'rgba(59, 130, 246, 0.15)'
+                                          : 'rgba(245, 158, 11, 0.15)',
+                                      color:
+                                        entry.reimbursement_status === 'rimborsato'
+                                          ? '#34d399'
+                                          : entry.reimbursement_status === 'donato'
+                                          ? '#60a5fa'
+                                          : '#fbbf24'
+                                    }}
+                                  >
+                                    {entry.reimbursement_status === 'rimborsato'
+                                      ? '🟢 Rimborsato'
+                                      : entry.reimbursement_status === 'donato'
+                                      ? '🔵 Donato'
+                                      : '🟠 Da rimborsare'}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          ) : (
+                            <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
+                              🏛️ Cassa Oratorio
+                            </span>
+                          )
+                        ) : (
+                          <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>—</span>
+                        )}
                       </td>
 
                       {/* Data */}
