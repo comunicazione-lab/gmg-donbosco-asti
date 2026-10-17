@@ -30,8 +30,8 @@ export default function Navbar({
         <div className="navbar-inner">
           {/* Brand */}
           <div className="brand-section">
-            <div className="brand-logo-badge">
-              <span>2027</span>
+            <div className="brand-logo-badge" title="Logo Ufficiale GMG Seoul Corea 2027">
+              <img src="/logo-korea-transparent.png" alt="Logo GMG Corea" className="brand-logo-img" />
             </div>
             <div className="brand-info">
               <h1>

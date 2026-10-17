@@ -139,8 +139,8 @@ export default function AuthModal({ isOpen, onClose, initialToken = null }) {
         {/* Header Modale */}
         <div className="modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div className="brand-logo-badge" style={{ width: '32px', height: '32px', fontSize: '0.9rem' }}>
-              <span>27</span>
+            <div className="brand-logo-badge" style={{ width: '36px', height: '36px' }}>
+              <img src="/logo-korea-transparent.png" alt="Logo GMG Corea" className="brand-logo-img" />
             </div>
             <h2 className="modal-title" style={{ fontSize: '1.2rem' }}>
               {mode === 'login' && 'Accedi al Portale GMG'}

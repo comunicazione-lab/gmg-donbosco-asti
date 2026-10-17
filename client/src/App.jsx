@@ -203,8 +203,8 @@ export default function App() {
               boxShadow: 'var(--shadow-sm)'
             }}
           >
-            <div className="brand-logo-badge" style={{ width: '56px', height: '56px', fontSize: '1.4rem', margin: '0 auto 16px auto' }}>
-              <span>27</span>
+            <div className="brand-logo-badge" style={{ width: '64px', height: '64px', margin: '0 auto 16px auto', padding: '6px' }}>
+              <img src="/logo-korea-transparent.png" alt="Logo GMG Corea" className="brand-logo-img" />
             </div>
             <h2 style={{ fontSize: '1.7rem', marginBottom: '10px' }}>
               Portale GMG Seoul 2027 • Don Bosco Asti
