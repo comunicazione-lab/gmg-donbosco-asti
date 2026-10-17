@@ -1,4 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import {
+  isPushSupported,
+  autoSubscribeIfPossible,
+  subscribeUserToPush
+} from '../utils/notifications';
 
 const AuthContext = createContext();
 
@@ -41,6 +46,8 @@ export function AuthProvider({ children }) {
         if (res.ok) {
           const data = await res.json();
           setUser(data.user);
+          // Attivazione automatica notifiche se consentito
+          autoSubscribeIfPossible(token).catch(() => {});
         } else {
           // Token scaduto o non valido
           localStorage.removeItem('gmg_token');
@@ -101,6 +108,16 @@ export function AuthProvider({ children }) {
       setToken(data.token);
       setUser(data.user);
       showToast(`Bentornato, ${data.user.full_name}!`, 'success');
+
+      // Attivazione notifiche push di default al login
+      if (isPushSupported() && localStorage.getItem('gmg_push_optout') !== 'true') {
+        setTimeout(() => {
+          subscribeUserToPush(data.token).catch((pushErr) => {
+            console.log('Attivazione notifiche di default al login:', pushErr.message);
+          });
+        }, 800);
+      }
+
       return { success: true };
     } catch (err) {
       showToast(err.message, 'error');

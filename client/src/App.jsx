@@ -9,6 +9,7 @@ import InitiativeModal from './components/InitiativeModal';
 import EntriesManagerModal from './components/EntriesManagerModal';
 import SettingsSection from './components/SettingsSection';
 import AuthModal from './components/AuthModal';
+import PushNotificationAutoPrompt from './components/PushNotificationAutoPrompt';
 import { useAuth } from './context/AuthContext';
 import { Search, PlusCircle, RefreshCw, Layers, LayoutDashboard, Coins, Settings } from 'lucide-react';
 
@@ -220,6 +221,9 @@ export default function App() {
         ) : (
           /* Vista Multi-Sezione per utenti autenticati */
           <>
+            {/* Banner attivazione notifiche di default */}
+            <PushNotificationAutoPrompt />
+
             {/* 1. SEZIONE DASHBOARD */}
             {activeSection === 'dashboard' && (
               <div>

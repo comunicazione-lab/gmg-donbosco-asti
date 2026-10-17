@@ -139,3 +139,23 @@ export async function sendTestPush(token) {
 
   return await res.json();
 }
+
+/**
+ * Attiva automaticamente le notifiche push di default se il browser lo consente:
+ * - Se il permesso è già 'granted', registra la sottoscrizione in background
+ * - Se non è ancora stato fatto opt-out, tenta la sottoscrizione
+ */
+export async function autoSubscribeIfPossible(token) {
+  if (!isPushSupported() || !token) return false;
+  if (localStorage.getItem('gmg_push_optout') === 'true') return false;
+
+  try {
+    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      await subscribeUserToPush(token);
+      return true;
+    }
+  } catch (err) {
+    console.log('Auto-sottoscrizione push di default:', err.message);
+  }
+  return false;
+}

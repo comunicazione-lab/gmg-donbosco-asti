@@ -38,7 +38,16 @@ export default function PushNotificationManager({ mode = 'card' }) {
 
     if (isSup) {
       getExistingSubscription().then((sub) => {
-        setSubscribed(!!sub);
+        if (sub) {
+          setSubscribed(true);
+        } else if (token && localStorage.getItem('gmg_push_optout') !== 'true') {
+          // Attivazione automatica di default se già concesso
+          if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+            subscribeUserToPush(token)
+              .then(() => setSubscribed(true))
+              .catch(() => {});
+          }
+        }
       });
     }
   }, [token]);
@@ -52,10 +61,12 @@ export default function PushNotificationManager({ mode = 'card' }) {
     setLoading(true);
     try {
       if (subscribed) {
+        localStorage.setItem('gmg_push_optout', 'true');
         await unsubscribeUserFromPush(token);
         setSubscribed(false);
-        showToast('Notifiche push disattivate con successo.', 'info');
+        showToast('Notifiche push disattivate su questo dispositivo.', 'info');
       } else {
+        localStorage.removeItem('gmg_push_optout');
         await subscribeUserToPush(token);
         setSubscribed(true);
         setPermission('granted');
