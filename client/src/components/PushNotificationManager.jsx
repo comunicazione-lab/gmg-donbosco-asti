@@ -20,7 +20,7 @@ import {
 } from '../utils/notifications';
 
 export default function PushNotificationManager({ mode = 'card' }) {
-  const { token, showToast, isAuthenticated } = useAuth();
+  const { token, showToast, isAuthenticated, isAdmin } = useAuth();
   const [supported, setSupported] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -244,16 +244,22 @@ export default function PushNotificationManager({ mode = 'card' }) {
               )}
             </button>
 
-            {subscribed && (
+            {/* Test Invio Notifica: Riservato SOLO al profilo Admin */}
+            {isAdmin && subscribed && (
               <button
-                className="btn btn-ghost btn-sm"
+                className="btn btn-outline btn-sm"
                 onClick={handleTest}
                 disabled={loading}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-                title="Invia una notifica di prova al tuo dispositivo per verificare che funzioni"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  borderColor: 'rgba(99, 102, 241, 0.4)'
+                }}
+                title="Invia una notifica push di prova al tuo dispositivo (riservato al profilo amministratore)"
               >
-                <Send size={14} />
-                <span>Invia Notifica di Prova</span>
+                <Send size={14} style={{ color: '#818cf8' }} />
+                <span>Test Notifica (Admin)</span>
               </button>
             )}
           </div>

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth, requireAdmin } = require('../middleware/auth');
 const { query } = require('../db');
 const {
   getVapidPublicKey,
@@ -59,25 +59,41 @@ router.get('/status', requireAuth, async (req, res) => {
   }
 });
 
-// Test notifica immediata inviata all'utente stesso
-router.post('/test', requireAuth, async (req, res) => {
+// Test invio notifica (Riservato ESCLUSIVAMENTE agli Amministratori)
+router.post('/test', requireAuth, requireAdmin, async (req, res) => {
   try {
-    const sent = await sendPushToUser(req.user.id, {
-      title: '🔔 Test Notifiche GMG 2027',
-      body: `Ciao ${req.user.full_name}, le notifiche push sul tuo dispositivo funzionano perfettamente!`,
+    const { target } = req.body || {}; // Opzionale: 'all' per broadcast di prova, default: all'admin stesso
+    let sent = 0;
+
+    if (target === 'all') {
+      const { sendPushToAll } = require('../services/notifications');
+      sent = await sendPushToAll({
+        title: '🔔 Notifica di Prova (GMG 2027)',
+        body: `Test inviato dall'amministratore ${req.user.full_name}: il sistema di notifiche push è attivo e funzionante!`,
+        icon: '/icon-192.png',
+        badge: '/icon.svg',
+        url: '/',
+        tag: `admin-broadcast-${Date.now()}`
+      });
+      return res.json({ success: true, message: `Notifica di test inviata a ${sent} dispositivi registrati!` });
+    }
+
+    sent = await sendPushToUser(req.user.id, {
+      title: '🔔 Test Notifica Push (Admin)',
+      body: `Ciao ${req.user.full_name}, il sistema di notifiche push è configurato e funzionante sul tuo dispositivo!`,
       icon: '/icon-192.png',
       badge: '/icon.svg',
       url: '/',
-      tag: `test-${Date.now()}`
+      tag: `test-admin-${Date.now()}`
     });
 
     if (sent > 0) {
-      res.json({ success: true, message: 'Notifica di test inviata al tuo dispositivo!' });
+      res.json({ success: true, message: 'Notifica di test inviata con successo al tuo dispositivo!' });
     } else {
-      res.status(400).json({ error: 'Nessun dispositivo registrato trovato per questo account.' });
+      res.status(400).json({ error: 'Nessun dispositivo registrato trovato per il tuo account amministratore. Assicurati di aver attivato le notifiche sul dispositivo.' });
     }
   } catch (err) {
-    console.error('Errore test push:', err);
+    console.error('Errore test push admin:', err);
     res.status(500).json({ error: 'Errore durante l\'invio della notifica di test.' });
   }
 });
