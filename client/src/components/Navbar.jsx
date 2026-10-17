@@ -12,6 +12,7 @@ import {
   Coins,
   Settings
 } from 'lucide-react';
+import PushNotificationManager from './PushNotificationManager';
 
 export default function Navbar({
   activeSection,
@@ -108,6 +109,9 @@ export default function Navbar({
                     <span>Nuova Attività</span>
                   </button>
                 )}
+
+                {/* Notifiche Push Web App */}
+                <PushNotificationManager mode="navbar" />
 
                 {/* Toggle Tema Luminoso / Notte */}
                 <button

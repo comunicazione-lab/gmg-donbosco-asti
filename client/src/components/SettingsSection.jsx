@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { formatEuro } from './DashboardStats';
+import PushNotificationManager from './PushNotificationManager';
 
 export default function SettingsSection({ currentSettings, onSettingsUpdated }) {
   const { token, isAdmin, isModerator, showToast, refreshPendingCount } = useAuth();
@@ -765,6 +766,9 @@ export default function SettingsSection({ currentSettings, onSettingsUpdated }) 
           )}
         </div>
       )}
+
+      {/* Sezione Notifiche Push & PWA */}
+      <PushNotificationManager mode="card" />
     </div>
   );
 }

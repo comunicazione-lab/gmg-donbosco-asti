@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { query } = require('../db');
 const { requireAuth, requireModerator } = require('../middleware/auth');
+const { notifyNewEntry, notifyReimbursementUpdated } = require('../services/notifications');
 
 // Helper per calcolare statistiche di una iniziativa
 async function getInitiativeWithTotals(initiativeId) {
@@ -341,6 +342,18 @@ router.post('/:id/entries', requireAuth, requireModerator, async (req, res) => {
       `Aggiunta voce ${type === 'income' ? 'guadagno' : 'spesa'} di €${numAmount.toFixed(2)} ("${title}") per "${initiative.title}"`
     ]);
 
+    // Invia notifica push a tutti gli utenti approvati (eccetto chi ha creato la voce)
+    notifyNewEntry({
+      initiativeTitle: initiative.title,
+      entry: {
+        type,
+        title: title.trim(),
+        amount: numAmount
+      },
+      authorName: req.user.full_name,
+      authorId: req.user.id
+    }).catch(pushErr => console.warn('⚠️ Errore invio push notification nuova voce:', pushErr.message));
+
     const updatedInitiative = await getInitiativeWithTotals(initiativeId);
     res.status(201).json({
       success: true,
@@ -451,6 +464,11 @@ router.patch('/:id/entries/:entryId/reimbursement', requireAuth, requireModerato
       req.user.full_name,
       `Stato spesa "${existingEntry.title}" aggiornato a "${labels[reimbursement_status]}" (${existingEntry.sustained_by_name || 'Cassa'})`
     ]);
+
+    // Invia notifica push a chi ha anticipato la spesa
+    notifyReimbursementUpdated(existingEntry, reimbursement_status).catch(pushErr =>
+      console.warn('⚠️ Errore invio push notification rimborso:', pushErr.message)
+    );
 
     const updatedInitiative = await getInitiativeWithTotals(initiativeId);
     res.json({

@@ -79,6 +79,14 @@ router.post('/:id/approve', requireAuth, requireModerator, async (req, res) => {
       VALUES (?, ?, 'APPROVAZIONE_UTENTE', ?)
     `, [req.user.id, req.user.full_name, `Approvato l'utente ${targetUser.username} (${targetUser.email}) da parte di ${req.user.full_name}`]);
 
+    // Notifica push all'utente approvato
+    try {
+      const { notifyUserApproved } = require('../services/notifications');
+      notifyUserApproved(targetUser).catch(pushErr => console.warn('⚠️ Errore invio push notifica utente approvato:', pushErr.message));
+    } catch (e) {
+      console.warn('⚠️ Impossibile notificare utente approvato via push:', e.message);
+    }
+
     res.json({ success: true, message: `Utente ${targetUser.full_name} approvato con successo!` });
   } catch (err) {
     console.error('Errore approvazione utente:', err);

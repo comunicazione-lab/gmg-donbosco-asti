@@ -83,6 +83,19 @@ router.post('/register', async (req, res) => {
       console.warn('⚠️ Impossibile recuperare lista admin per notifica:', adminErr.message);
     }
 
+    // Invia notifica push agli amministratori
+    try {
+      const { notifyNewUserRegistration } = require('../services/notifications');
+      notifyNewUserRegistration({
+        id: result.lastID,
+        full_name: full_name.trim(),
+        email: cleanEmail,
+        username: cleanUsername
+      }).catch(pushErr => console.warn('⚠️ Errore notifica push nuova registrazione:', pushErr.message));
+    } catch (pushImportErr) {
+      console.warn('⚠️ Impossibile inviare notifica push registrazione:', pushImportErr.message);
+    }
+
     return res.status(201).json({
       success: true,
       message: 'Registrazione inviata con successo! Un moderatore o l\'amministratore dell\'oratorio dovrà approvare il tuo account prima del primo accesso.',

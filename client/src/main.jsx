@@ -11,3 +11,17 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     </AuthProvider>
   </React.StrictMode>
 );
+
+// Registrazione del Service Worker per Progressive Web App e Notifiche Push
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('/sw.js')
+      .then((reg) => {
+        console.log('✅ Service Worker GMG 2027 registrato, scope:', reg.scope);
+      })
+      .catch((err) => {
+        console.warn('⚠️ Errore registrazione Service Worker:', err);
+      });
+  });
+}

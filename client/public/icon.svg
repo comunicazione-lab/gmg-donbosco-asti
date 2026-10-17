@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="50%" stop-color="#1e1b4b" />
+      <stop offset="100%" stop-color="#090d16" />
+    </linearGradient>
+    <linearGradient id="primaryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1" />
+      <stop offset="100%" stop-color="#4f46e5" />
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f43f5e" />
+      <stop offset="100%" stop-color="#fb7185" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="12" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background squircle -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)" />
+  <rect width="504" height="504" x="4" y="4" rx="108" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="4" />
+
+  <!-- Background subtle glow circle -->
+  <circle cx="256" cy="230" r="150" fill="#6366f1" opacity="0.18" filter="url(#glow)" />
+
+  <!-- GMG Seoul Emblem Graphic -->
+  <!-- Stylized cross -->
+  <rect x="238" y="110" width="36" height="210" rx="18" fill="url(#goldGrad)" filter="url(#glow)" />
+  <rect x="156" y="170" width="200" height="36" rx="18" fill="url(#goldGrad)" filter="url(#glow)" />
+
+  <!-- Heart / Flame / Wings of Hope -->
+  <path d="M190 280 C150 240, 150 180, 200 150 C230 130, 256 160, 256 160 C256 160, 282 130, 312 150 C362 180, 362 240, 322 280 L256 345 Z" 
+        fill="url(#accentGrad)" opacity="0.85" />
+
+  <!-- Dove / Light rays -->
+  <circle cx="256" cy="188" r="28" fill="#ffffff" />
+  <path d="M256 165 L264 182 L282 185 L268 196 L273 214 L256 203 L239 214 L244 196 L230 185 L248 182 Z" fill="#f59e0b" />
+
+  <!-- Badge / Bottom Banner text -->
+  <rect x="76" y="380" width="360" height="64" rx="20" fill="rgba(30, 41, 59, 0.9)" stroke="rgba(255, 255, 255, 0.12)" stroke-width="2" />
+  <text x="256" y="414" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="24" font-weight="800" fill="#ffffff" text-anchor="middle" letter-spacing="3">GMG SEOUL 2027</text>
+  <text x="256" y="433" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="600" fill="#94a3b8" text-anchor="middle" letter-spacing="1.5">DON BOSCO ASTI</text>
+</svg>

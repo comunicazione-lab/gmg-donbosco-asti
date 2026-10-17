@@ -39,11 +39,21 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/initiatives', require('./routes/initiatives'));
 app.use('/api/settings', require('./routes/settings'));
+app.use('/api/notifications', require('./routes/notifications'));
 
 // Servizio frontend in produzione o se client/dist esiste
 const clientDist = path.join(__dirname, '../client/dist');
 if (fs.existsSync(clientDist)) {
   console.log('Serving frontend static assets from client/dist');
+
+  // Assicura che il Service Worker non venga cachato aggressivamente dai browser
+  app.use((req, res, next) => {
+    if (req.path === '/sw.js') {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    }
+    next();
+  });
+
   app.use(express.static(clientDist));
 
   // SPA fallback
