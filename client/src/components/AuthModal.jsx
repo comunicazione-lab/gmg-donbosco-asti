@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-export default function AuthModal({ isOpen, onClose, initialToken = null }) {
+export default function AuthModal({ isOpen, onClose, initialToken = null, onLoginSuccess }) {
   const { login, register, forgotPassword, resetPassword, showToast } = useAuth();
 
   // Modal mode: 'login' | 'register' | 'forgot' | 'reset'
@@ -61,6 +61,9 @@ export default function AuthModal({ isOpen, onClose, initialToken = null }) {
     setLoading(false);
     if (result.success) {
       onClose();
+      if (onLoginSuccess) {
+        onLoginSuccess();
+      }
     }
   };
 

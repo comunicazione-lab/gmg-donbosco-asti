@@ -18,6 +18,7 @@ import {
   unsubscribeUserFromPush,
   sendTestPush
 } from '../utils/notifications';
+import InstallPwaModal from './InstallPwaModal';
 
 export default function PushNotificationManager({ mode = 'card' }) {
   const { token, showToast, isAuthenticated, isAdmin } = useAuth();
@@ -26,6 +27,7 @@ export default function PushNotificationManager({ mode = 'card' }) {
   const [loading, setLoading] = useState(false);
   const [permission, setPermission] = useState('default');
   const [isStandalone, setIsStandalone] = useState(false);
+  const [showInstallGuide, setShowInstallGuide] = useState(false);
 
   useEffect(() => {
     const isSup = isPushSupported();
@@ -281,38 +283,25 @@ export default function PushNotificationManager({ mode = 'card' }) {
                 <Smartphone size={13} /> Web App installata nella Home
               </span>
             ) : (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                <Smartphone size={13} /> Disponibile come App (PWA)
-              </span>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={() => setShowInstallGuide(true)}
+                style={{ fontSize: '0.78rem', padding: '4px 10px', color: '#38bdf8' }}
+              >
+                <Smartphone size={13} />
+                <span>Come installare l'App sulla Home...</span>
+              </button>
             )}
           </div>
         </div>
-
-        {/* Guida iPhone / iOS */}
-        <div
-          style={{
-            marginTop: '16px',
-            padding: '12px 14px',
-            borderRadius: '8px',
-            backgroundColor: 'rgba(56, 189, 248, 0.08)',
-            border: '1px solid rgba(56, 189, 248, 0.2)',
-            fontSize: '0.8rem',
-            color: 'var(--text-color)',
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: '10px'
-          }}
-        >
-          <HelpCircle size={16} style={{ color: '#38bdf8', flexShrink: 0, marginTop: '2px' }} />
-          <div>
-            <strong>Come installare come App su iPhone / Android:</strong>
-            <ul style={{ margin: '4px 0 0 0', paddingLeft: '16px', lineHeight: 1.5 }}>
-              <li><strong>Su iPhone (iOS 16.4+):</strong> Apri Safari, tocca il pulsante Condividi <span style={{ padding: '1px 4px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px' }}>📤</span> e seleziona <strong>"Aggiungi alla schermata Home" 📱</strong>. Aprila dalla schermata Home per attivare le notifiche push.</li>
-              <li><strong>Su Android / Chrome:</strong> Tocca il menu a tre puntini ⋮ e scegli <strong>"Installa applicazione"</strong> o <strong>"Aggiungi a schermata Home"</strong>.</li>
-            </ul>
-          </div>
-        </div>
       </div>
+
+      {/* Popup Istruzioni Installazione */}
+      <InstallPwaModal
+        isOpen={showInstallGuide}
+        onClose={() => setShowInstallGuide(false)}
+      />
     </div>
   );
 }

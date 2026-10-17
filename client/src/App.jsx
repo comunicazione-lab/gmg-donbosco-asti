@@ -10,6 +10,8 @@ import EntriesManagerModal from './components/EntriesManagerModal';
 import SettingsSection from './components/SettingsSection';
 import AuthModal from './components/AuthModal';
 import PushNotificationAutoPrompt from './components/PushNotificationAutoPrompt';
+import InstallPwaModal from './components/InstallPwaModal';
+import { isStandalonePWA } from './utils/notifications';
 import { useAuth } from './context/AuthContext';
 import { Search, PlusCircle, RefreshCw, Layers, LayoutDashboard, Coins, Settings } from 'lucide-react';
 
@@ -36,6 +38,16 @@ export default function App() {
   const [selectedInitiativeId, setSelectedInitiativeId] = useState(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [resetTokenUrl, setResetTokenUrl] = useState(null);
+  const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
+
+  // Appena fai il login: se la web app non è ancora stata scaricata/installata nella Home, mostra il popup guida
+  const handleLoginSuccess = () => {
+    if (!isStandalonePWA()) {
+      setTimeout(() => {
+        setIsInstallModalOpen(true);
+      }, 400);
+    }
+  };
 
   // Rilevamento automatico link di ripristino password da email (?reset_token=...)
   useEffect(() => {
@@ -431,6 +443,13 @@ export default function App() {
           setResetTokenUrl(null);
         }}
         initialToken={resetTokenUrl}
+        onLoginSuccess={handleLoginSuccess}
+      />
+
+      {/* Modale Istruzioni Installazione su iPhone/Android (se non ancora scaricata) */}
+      <InstallPwaModal
+        isOpen={isInstallModalOpen}
+        onClose={() => setIsInstallModalOpen(false)}
       />
     </div>
   );
